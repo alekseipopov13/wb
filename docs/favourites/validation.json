@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-19",
+  "status": "passed",
+  "build": {
+    "status": "passed",
+    "command": "xcodebuild -project WBSandbox.xcodeproj -scheme WBSandbox -configuration Debug -sdk iphonesimulator -derivedDataPath /tmp/wb-favourites-handoff-build CODE_SIGNING_ALLOWED=NO build",
+    "scope": "clean isolated worktree, iOS Simulator"
+  },
+  "checks": [
+    {
+      "name": "feed",
+      "status": "passed",
+      "coverage": "new client, banking, frequency, limits; 242 combinations"
+    },
+    {
+      "name": "favourite amount",
+      "status": "passed",
+      "coverage": "prefill, disabled input, chips, decimals, bounds, original operation amount"
+    },
+    {
+      "name": "editing and undo",
+      "status": "passed",
+      "coverage": "order, expiry, duplicate undo, last item, monthly readings"
+    },
+    {
+      "name": "collection",
+      "status": "passed",
+      "coverage": "insertion/removal cascades, row insertion policy, delay cap, reverse wrap path"
+    },
+    {
+      "name": "deck",
+      "status": "passed",
+      "coverage": "inertia, cancellation, arm/disarm hysteresis, haptic gating"
+    },
+    {
+      "name": "reminder geometry",
+      "status": "passed",
+      "coverage": "fixed tail through scale, deformation, rotation and overshoot"
+    },
+    {
+      "name": "transaction amount",
+      "status": "passed",
+      "coverage": "decimal typing, trailing separator, formatting, limits, backspace"
+    },
+    {
+      "name": "documentation and motion reference",
+      "status": "passed",
+      "coverage": "nine consistent pages, relative links, media present, regenerated timeline samples match committed JSON"
+    }
+  ],
+  "visual_review": {
+    "status": "passed",
+    "method": "iPhone 17 Simulator, current components, recorded intermediate frames",
+    "cases": [
+      "insertion cascade and wrap",
+      "removal from start and middle",
+      "undo and edit-mode exit",
+      "input retained in editor",
+      "current slide and flight transitions",
+      "deck demo through shared gesture model",
+      "subtle editing wiggle",
+      "recommendation promotion",
+      "reminder pinned appearance",
+      "Pow Pop"
+    ]
+  },
+  "not_validated": [
+    "physical-device haptics",
+    "performance of downstream product implementation",
+    "server integration",
+    "live banking data"
+  ],
+  "media_note": "GIF previews are 20 fps and loop for documentation; MP4 exports are 60 fps. Frame duplication cannot create missing captured detail. Clips retain the recorded motion tempo; tables and live timelines define implementation timing.",
+  "media_validation": {
+    "status": "passed",
+    "video_count": 10,
+    "checks": [
+      "full decode",
+      "60 fps export",
+      "video-only stream",
+      "nonempty linked GIFs and storyboards"
+    ]
+  }
+}

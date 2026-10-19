@@ -1,0 +1,128 @@
+[
+  {
+    "id": "01-reminder",
+    "source_recording": "output/favourites-polish/reminder.mp4",
+    "trim_start_seconds": 0,
+    "duration_seconds": 1.8,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.017,
+      0.187,
+      0.387,
+      1.78
+    ]
+  },
+  {
+    "id": "02-deck-pull",
+    "source_recording": "output/favourites-handoff-2026-10-19/deck-native.mp4",
+    "trim_start_seconds": 3.867,
+    "duration_seconds": 1.566667,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.317,
+      0.487,
+      0.687,
+      1.547
+    ]
+  },
+  {
+    "id": "03-header-move-in",
+    "source_recording": "output/favourites-handoff-2026-10-19/move-in-native.mp4",
+    "trim_start_seconds": 5.933,
+    "duration_seconds": 1.1,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.317,
+      0.487,
+      0.687,
+      1.08
+    ]
+  },
+  {
+    "id": "04-header-flight",
+    "source_recording": "output/favourites-handoff-2026-10-19/flight-native.mp4",
+    "trim_start_seconds": 3.533,
+    "duration_seconds": 2.2,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.383,
+      0.553,
+      0.753,
+      2.18
+    ]
+  },
+  {
+    "id": "05-grid-insertion",
+    "source_recording": "output/favourites-handoff-2026-10-19/grid-native.mp4",
+    "trim_start_seconds": 3.867,
+    "duration_seconds": 1.383333,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.35,
+      0.52,
+      0.72,
+      1.363
+    ]
+  },
+  {
+    "id": "06-promotion",
+    "source_recording": "output/favourites-handoff-2026-10-19/promotion-native.mp4",
+    "trim_start_seconds": 10.667,
+    "duration_seconds": 2.4,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.783,
+      0.953,
+      1.153,
+      2.38
+    ]
+  },
+  {
+    "id": "07-wiggle",
+    "source_recording": "output/favourites-handoff-2026-10-19/wiggle-native.mp4",
+    "trim_start_seconds": 9.2,
+    "duration_seconds": 3.2,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.55,
+      0.72,
+      0.92,
+      3.18
+    ]
+  },
+  {
+    "id": "08-removal",
+    "source_recording": "output/favourites-removal-2026-10-19/removal-demo.mp4",
+    "trim_start_seconds": 3.2,
+    "duration_seconds": 5.2,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.417,
+      0.587,
+      0.787,
+      5.18
+    ]
+  },
+  {
+    "id": "09-heart-pop",
+    "source_recording": "output/operation-pop/pop.mp4",
+    "trim_start_seconds": 0,
+    "duration_seconds": 1.683333,
+    "preview_fps": 20,
+    "video_fps": 60,
+    "storyboard_seconds": [
+      0.183,
+      0.353,
+      0.553,
+      1.663
+    ]
+  }
+]
