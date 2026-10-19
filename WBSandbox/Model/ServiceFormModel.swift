@@ -794,18 +794,7 @@ final class ServiceFormModel {
     }
 
     func setAmount(_ raw: String) {
-        let digits = raw.filter { $0.isNumber || $0 == "," || $0 == "." }
-        let parts = digits.replacingOccurrences(of: ".", with: ",").split(separator: ",")
-        var input = AmountInput(0)
-        if let whole = parts.first, let value = Decimal(string: String(whole.prefix(9))) {
-            input = AmountInput(value)
-        }
-        if parts.count > 1 {
-            let fraction = String(parts[1].prefix(2))
-            input.appendSeparator()
-            for character in fraction { input.append(digit: String(character)) }
-        }
-        amount = input
+        amount = AmountInput(raw: raw)
         isAmountTouched = true
     }
 

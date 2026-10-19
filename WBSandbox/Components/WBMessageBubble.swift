@@ -45,10 +45,33 @@ struct WBMessageBubble: View {
         }
     }
 
+    /// По умолчанию сохраняет геометрию сообщения к открытке.
+    struct Metrics {
+        var width: CGFloat?
+        var horizontalPadding: CGFloat = 13
+        var lineHeight: CGFloat?
+        var tailSize = CGSize(width: 16, height: 20)
+        var tailOffset = CGSize(width: -4.5, height: 0)
+        var cornerStyle: RoundedCornerStyle = .continuous
+        var insetStroke = false
+
+        /// Figma 60529:168953. SVG хранит видимый overflow хвостика 20 × 20.
+        static let favouriteReminder = Metrics(
+            width: 108,
+            horizontalPadding: 12,
+            lineHeight: 17,
+            tailSize: CGSize(width: 21, height: 22),
+            tailOffset: CGSize(width: -4.619140625, height: 6),
+            cornerStyle: .circular,
+            insetStroke: true
+        )
+    }
+
     let message: String
     var position: Position = .right
     var artwork: Artwork?
     var tailImage: Image?
+    var metrics: Metrics
     let style: Style
 
     init(
@@ -56,12 +79,14 @@ struct WBMessageBubble: View {
         position: Position = .right,
         artwork: Artwork? = nil,
         tailImage: Image? = nil,
+        metrics: Metrics = Metrics(),
         style: Style
     ) {
         self.message = message
         self.position = position
         self.artwork = artwork
         self.tailImage = tailImage
+        self.metrics = metrics
         self.style = style
     }
 
@@ -80,33 +105,53 @@ struct WBMessageBubble: View {
     }
 
     private var messageBubble: some View {
-        IntrinsicWidthCapLayout(maxWidth: 263) {
-            Text(message)
+        IntrinsicWidthCapLayout(maxWidth: metrics.width ?? 263) {
+            messageText
                 .font(style.font)
                 .foregroundStyle(style.textColor)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 13)
+                .padding(.horizontal, metrics.horizontalPadding)
                 .padding(.vertical, 9)
                 .frame(minHeight: 40, alignment: .leading)
+                .frame(width: metrics.width, alignment: .leading)
         }
         .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: metrics.cornerStyle)
                 .fill(style.bubbleBackground)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(style.bubbleStroke, lineWidth: 1)
+                    if metrics.insetStroke {
+                        RoundedRectangle(cornerRadius: 20, style: metrics.cornerStyle)
+                            .strokeBorder(style.bubbleStroke, lineWidth: 1)
+                    } else {
+                        RoundedRectangle(cornerRadius: 20, style: metrics.cornerStyle)
+                            .stroke(style.bubbleStroke, lineWidth: 1)
+                    }
                 }
         }
         .overlay(alignment: position.tailAlignment) {
             if let tailImage {
                 tailImage
                     .resizable()
-                    .frame(width: 16, height: 20)
+                    .frame(width: metrics.tailSize.width, height: metrics.tailSize.height)
                     .scaleEffect(x: position == .right ? -1 : 1, y: 1)
-                    .offset(x: position == .right ? 4.5 : -4.5)
+                    .offset(x: position == .right ? -metrics.tailOffset.width : metrics.tailOffset.width,
+                            y: metrics.tailOffset.height)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var messageText: some View {
+        if let lineHeight = metrics.lineHeight {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(message.components(separatedBy: .newlines).prefix(2).enumerated()), id: \.offset) { _, line in
+                    Text(line).frame(height: lineHeight, alignment: .leading)
+                }
+            }
+        } else {
+            Text(message)
         }
     }
 

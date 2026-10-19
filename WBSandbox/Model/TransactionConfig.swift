@@ -27,7 +27,7 @@ enum RowIcon {
     /// списания, и в 24 pt карточке способа оплаты. `offset` — тоже доля плитки:
     /// логотип не всегда стоит по центру (у щита Т-Банка низ острый, и в макете
     /// он поднят на 2,5 % высоты).
-    case logo(String, size: CGSize, background: Color, radius: CGFloat, offset: CGSize)
+    case logo(String, size: CGSize, background: Color, radius: CGFloat, offset: CGSize, foreground: Color? = nil)
     /// Плейсхолдер на SF Symbol там, где настоящего экспорта пока нет.
     case symbol(name: String, tint: Color, background: Color)
 
@@ -47,7 +47,7 @@ enum RowIcon {
     /// исхода — так эффект попадает в бренд получателя, а не живёт своей жизнью.
     var tint: Color {
         switch self {
-        case .logo(_, _, let background, _, _): background
+        case .logo(_, _, let background, _, _, _): background
         case .symbol(_, _, let background): background
         case .brandedAsset(_, let tint): tint
         case .asset, .flag, .placeholder: WBColor.brandBlue

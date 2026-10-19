@@ -110,6 +110,11 @@ enum SandboxDestination {
     case serviceMatrix
     /// Эталонные компоненты ПиП, повторённые с Figma.
     case pipDesignSystem
+    /// Карточки «Откуда / куда» актуального транзакционного экрана.
+    case pipTransactionComponents
+    /// Figma 61104:47356 — напоминание над карточкой избранного.
+    case favouritesReminder
+    case favouritesComponents
     /// UniQR — ввод суммы по QR-коду.
     case uniQR
     /// UniQR v2 — с потерей бонусных ВБ при выборе СБП.
@@ -124,6 +129,14 @@ enum SandboxDestination {
     case esim
     /// Apple Card — раскадровка блока кода активации.
     case activationCodeStates
+    /// Разводящий экран ПиП с избранными переводами и платежами.
+    case favouritesPayments(FavouritesDemoScenario)
+    /// Эксперимент с папкой «Все избранные» в горизонтальной ленте.
+    case favouritesFolderExperiment
+    /// One live example per animation, with its own screen file and reset.
+    case favouritesAnimation(FavouritesAnimationExample)
+    /// Детали операции, включая добавление в избранное через Pow Pop.
+    case operationDetails
 }
 
 struct SandboxItem: Identifiable {
@@ -164,13 +177,52 @@ struct SandboxSectionGroup: Identifiable {
 enum SandboxCatalog {
     /// Разделы на первом уровне песочницы.
     static let rootSections: [SandboxSection] = [
-        pip, activationCode, esim, postcards, ideas, morph,
+        favourites, pip, activationCode, esim, postcards, ideas, morph,
     ]
 
     /// Полный каталог: нужен маршрутизации, в том числе для вложенных разделов.
     static let sections: [SandboxSection] = [
-        pip, pipDesignSystem, activationCode, transfer, esim, postcards, services, groups, groupsWork, ideas, outcomes, morph,
+        favourites, favouritesAnimations, pip, pipDesignSystem, activationCode, transfer, esim, postcards, services, groups, groupsWork, ideas, outcomes, outcomeArchive, morph,
     ]
+
+    static let favourites = SandboxSection(
+        id: "favourites",
+        title: "Избранное",
+        subtitle: "Три общих примера и отдельные анимации",
+        symbol: "star",
+        items: [
+            SandboxItem(
+                id: "payments",
+                title: "Переводы и платежи",
+                subtitle: "Разводящий экран · Figma 60919:530144",
+                destination: .favouritesPayments(.full)
+            ),
+            SandboxItem(
+                id: "folder-test",
+                title: "Новый вариант",
+                subtitle: "Папка «Все избранные» · раскрытие при протяжке",
+                destination: .favouritesFolderExperiment
+            ),
+            SandboxItem(
+                id: "operation-details",
+                title: "Детали операции",
+                subtitle: "МТС и МГТС · В обработке · Figma 60571:136539",
+                destination: .operationDetails
+            ),
+        ],
+        childSectionIDs: ["favourites-animations"]
+    )
+
+    static let favouritesAnimations = SandboxSection(
+        id: "favourites-animations",
+        title: "Анимации по отдельности",
+        subtitle: "Один пример — одна анимация",
+        symbol: "play.rectangle",
+        items: FavouritesAnimationExample.allCases.map { example in
+            SandboxItem(id: example.rawValue, title: example.title, subtitle: example.subtitle,
+                        destination: .favouritesAnimation(example))
+        }
+    )
 
     // MARK: ПиП
 
@@ -183,7 +235,7 @@ enum SandboxCatalog {
         subtitle: "Переводы, оплаты и исходы операций",
         symbol: "arrow.left.arrow.right.circle",
         items: [],
-        childSectionIDs: ["pip-design-system", "groups-work", "outcome", "transfer", "services", "groups"],
+        childSectionIDs: ["pip-design-system", "groups-work", "outcome", "transfer", "services", "groups", "outcome-archive"],
         childGroups: [
             SandboxSectionGroup(
                 id: "main",
@@ -193,7 +245,7 @@ enum SandboxCatalog {
             SandboxSectionGroup(
                 id: "other",
                 title: "Остальное",
-                sectionIDs: ["transfer", "services", "groups"]
+                sectionIDs: ["transfer", "services", "groups", "outcome-archive"]
             ),
         ]
     )
@@ -201,7 +253,7 @@ enum SandboxCatalog {
     static let pipDesignSystem = SandboxSection(
         id: "pip-design-system",
         title: "Дизайн-система",
-        subtitle: "Эталон Top и stiky bar из Figma",
+        subtitle: "Top, stiky bar и карточки транзакции",
         symbol: "square.grid.2x2",
         items: [
             SandboxItem(
@@ -209,6 +261,24 @@ enum SandboxCatalog {
                 title: "Top + stiky bar",
                 subtitle: "48516:73991 · 48486:49048",
                 destination: .pipDesignSystem
+            ),
+            SandboxItem(
+                id: "transaction-cards",
+                title: "Карточки транзакции",
+                subtitle: "Откуда → куда · заполненные и пустые состояния",
+                destination: .pipTransactionComponents
+            ),
+            SandboxItem(
+                id: "favourites-reminder",
+                title: "Сообщение «Скоро оплата»",
+                subtitle: "Рост от хвостика и мягкий поворот",
+                destination: .favouritesReminder
+            ),
+            SandboxItem(
+                id: "favourites-components",
+                title: "Компоненты избранного",
+                subtitle: "Цепочка карточек и большие аватары",
+                destination: .favouritesComponents
             ),
         ]
     )
@@ -505,39 +575,37 @@ enum SandboxCatalog {
     /// комиссия, получатель и комментарий взяты оттуда, поэтому у каждого пункта
     /// свой `override`, а не общий конфиг перевода.
     ///
-    /// Каждый исход даёт две строки: кадр из макета и его копия v2 с живым
-    /// свечением. Копия, а не переключатель внутри одного экрана, — чтобы на
-    /// показе открыть два экрана подряд и сравнить их вживую; так же сделан
-    /// «живой фон» в разделе «Перевод».
+    /// Единственная активная версия экрана результата для всех платежей ПиП.
     static let outcomes = SandboxSection(
         id: "outcome",
         title: "Экран успеха",
-        subtitle: "Три исхода операции, у каждого копия с живым свечением",
+        subtitle: "Успех, в обработке, отказано · общий экран ПиП",
         symbol: "checkmark.circle",
-        items: [success, processing, declined].flatMap(rows(for:))
+        items: [success, processing, declined].map(outcomeItem)
     )
 
-    /// Строки одного исхода: макетная и её копия v2 на шейдере.
-    private static func rows(for scenario: OutcomeScenario) -> [SandboxItem] {
-        var ember = scenario
-        ember.id += "-v2"
-        ember.demoName += " · v2"
-        ember.glowStyle = .ember
+    /// V2 сохранена для истории, но исключена из основных сценариев.
+    static let outcomeArchive = SandboxSection(
+        id: "outcome-archive",
+        title: "Архив",
+        subtitle: "Экран успеха · V2 · не использовать в сценариях",
+        symbol: "archivebox",
+        items: [success, processing, declined].map { scenario in
+            var archived = scenario
+            archived.id += "-v2"
+            archived.demoName += " · v2"
+            archived.glowStyle = .ember
+            return outcomeItem(archived)
+        }
+    )
 
-        return [
-            SandboxItem(
-                id: scenario.id,
-                title: scenario.demoName,
-                subtitle: scenario.outcome.title,
-                destination: .outcome(scenario)
-            ),
-            SandboxItem(
-                id: ember.id,
-                title: ember.demoName,
-                subtitle: "\(ember.outcome.title) · живое свечение",
-                destination: .outcome(ember)
-            ),
-        ]
+    private static func outcomeItem(_ scenario: OutcomeScenario) -> SandboxItem {
+        SandboxItem(
+            id: scenario.id,
+            title: scenario.demoName,
+            subtitle: scenario.outcome.title,
+            destination: .outcome(scenario)
+        )
     }
 
     private static let success = OutcomeScenario(

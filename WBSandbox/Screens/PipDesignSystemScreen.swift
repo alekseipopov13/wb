@@ -548,8 +548,18 @@ struct PipInput: View {
     var focus: FocusState<String?>.Binding
     var placeholder: String
     var error: String?
+    var floatingLabel = false
+    var isEnabled = true
+    var currency: String?
+    var keyboard: UIKeyboardType?
+    var textFont: Font?
+    var labelFont: Font?
+    var accessibilityID: String?
+    var externalOutlineColor: Color?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var isFocused: Bool { focus.wrappedValue == field.id }
+    private var isFocused: Bool { isEnabled && focus.wrappedValue == field.id }
+    private var labelIsRaised: Bool { floatingLabel && !value.isEmpty }
     private var errorColor: Color { Color(hex: 0xFF0F4F) }
     private var shape: RoundedRectangle {
         RoundedRectangle(cornerRadius: WBRadius.x5, style: .circular)
@@ -557,29 +567,63 @@ struct PipInput: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: WBSpace.x2) {
-            ZStack(alignment: .leading) {
-                if value.isEmpty, !placeholder.isEmpty {
-                    Text(placeholder)
-                        .font(WBFont.hauss(17, .regular))
-                        .foregroundStyle(WBColor.textSecondary)
-                        .lineLimit(1)
-                }
+            HStack(spacing: 8) {
+                ZStack(alignment: .leading) {
+                    if !floatingLabel, value.isEmpty, !placeholder.isEmpty {
+                        Text(placeholder)
+                            .font(textFont ?? WBFont.hauss(17, .regular))
+                            .foregroundStyle(isEnabled ? WBColor.textSecondary : WBColor.controlsTertiary)
+                            .lineLimit(1)
+                            .accessibilityHidden(true)
+                    }
 
-                TextField("", text: $value)
-                    .textFieldStyle(.plain)
-                    .font(WBFont.hauss(17, .regular))
-                    .foregroundStyle(WBColor.textPrimary)
-                    .keyboardType(format.keyboard)
-                    .textInputAutocapitalization(format.keyboard == .default ? .sentences : .never)
-                    .autocorrectionDisabled(format.keyboard != .default)
-                    .tint(WBColor.textAccent)
-                    .focused(focus, equals: field.id)
-                    .frame(height: 20)
+                    TextField("", text: $value)
+                        .textFieldStyle(.plain)
+                        .font(textFont ?? WBFont.hauss(17, .regular))
+                        .foregroundStyle(isEnabled ? WBColor.textPrimary : WBColor.controlsTertiary)
+                        .keyboardType(keyboard ?? format.keyboard)
+                        .textInputAutocapitalization(format.keyboard == .default ? .sentences : .never)
+                        .autocorrectionDisabled(format.keyboard != .default)
+                        .tint(WBColor.textAccent)
+                        .focused(focus, equals: field.id)
+                        .disabled(!isEnabled)
+                        .accessibilityLabel(field.label)
+                        .accessibilityIdentifier(accessibilityID ?? field.id)
+                        .frame(height: 20)
+                        .offset(y: labelIsRaised ? 8.5 : 0)
+
+                    if floatingLabel {
+                        // Одна подпись во всех состояниях: не подменяем её
+                        // отдельным placeholder при очистке/выключении поля.
+                        Text(field.label)
+                            .font(labelFont ?? WBFont.description)
+                            .foregroundStyle(isEnabled ? WBColor.textSecondary : WBColor.controlsTertiary)
+                            .frame(height: 17, alignment: .leading)
+                            .scaleEffect(labelIsRaised ? 1 : 17.0 / 13, anchor: .leading)
+                            .offset(y: labelIsRaised ? -10 : 0)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .frame(height: floatingLabel ? 37 : 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if let currency {
+                    Text(currency)
+                        .font(textFont ?? WBFont.hauss(17, .regular))
+                        .foregroundStyle(isEnabled ? WBColor.textSecondary : WBColor.controlsTertiary)
+                        .accessibilityHidden(true)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, WBSpace.x4)
             .frame(height: 52)
             .background(WBColor.bgMinus1, in: shape)
+            .background {
+                if let externalOutlineColor {
+                    // Figma: 4 pt OUTSIDE. The opaque field covers the inner half.
+                    shape.stroke(externalOutlineColor, lineWidth: 8)
+                }
+            }
             .overlay {
                 shape.strokeBorder(
                     error != nil ? errorColor : (isFocused ? WBColor.textPrimary : .clear),
@@ -587,7 +631,9 @@ struct PipInput: View {
                 )
             }
             .contentShape(Rectangle())
-            .onTapGesture { focus.wrappedValue = field.id }
+            .onTapGesture { if isEnabled { focus.wrappedValue = field.id } }
+            .animation(reduceMotion ? nil : SandboxMotion.fieldState, value: labelIsRaised)
+            .animation(reduceMotion ? nil : SandboxMotion.fieldState, value: isEnabled)
 
             if let error {
                 Text(error)

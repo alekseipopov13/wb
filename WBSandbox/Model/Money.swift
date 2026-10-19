@@ -86,6 +86,17 @@ struct AmountInput: Equatable {
     private(set) var integerDigits: String
     private(set) var fractionDigits: String?
 
+    /// Ввод из системного decimalPad: сохраняем в том числе «0,» и «1 000,0».
+    init(raw: String) {
+        let cleaned = raw.filter { $0.isNumber || $0 == "," || $0 == "." }
+            .replacingOccurrences(of: ".", with: ",")
+        let parts = cleaned.split(separator: ",", maxSplits: 1, omittingEmptySubsequences: false)
+        let whole = String((parts.first ?? "").prefix(9))
+        integerDigits = String(whole.drop(while: { $0 == "0" }))
+        if integerDigits.isEmpty { integerDigits = "0" }
+        fractionDigits = parts.count > 1 ? String(parts[1].filter(\.isNumber).prefix(2)) : nil
+    }
+
     init(_ value: Decimal) {
         // Целую часть отрезаем, а не округляем: у 6 214,80 округление вверх давало
         // 6 215 рублей и −20 копеек, и сумма рисовалась как «6 215,-20 ₽».

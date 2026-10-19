@@ -17,7 +17,6 @@ struct ServiceAmountScreen: View {
     var onFinish: () -> Void = {}
     var onOpenSpec: () -> Void = {}
 
-    @FocusState private var isAmountFocused: Bool
     @State private var isUrgent = false
     @State private var isFinishing = false
 
@@ -31,33 +30,41 @@ struct ServiceAmountScreen: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            WBNavBar(title: model.payTitle, leading: .back, onLeading: onBack)
-                .background(WBColor.bgBase)
-
-            Spacer(minLength: 0)
-
-            amount
-
-            Spacer(minLength: 0)
-
-            VStack(spacing: WBSpace.x3) {
-                tiles
-                if spec.id == "requisites-budget" { urgentTransfer }
-                WBPrimaryButton(title: "Перевести", subtitle: feeNote) {
-                    Haptics.tap()
-                    model.isOutcomePresented = true
-                }
-                if spec.id == "requisites-budget" {
-                    Text(recipient.timing)
+        PipTransactionLayout(
+            title: model.payTitle,
+            buttonTitle: shortfall == nil ? spec.ctaTitle : "Пополнить на",
+            buttonSubtitle: shortfall.map(Money.rub) ?? feeNote,
+            buttonFill: shortfall == nil ? WBColor.ctaFill : WBColor.ctaTopUp,
+            onBack: onBack,
+            onPay: pay
+        ) {
+            VStack(spacing: WBSpace.x2) {
+                PipTransactionAmount(input: Binding(
+                    get: { model.amount },
+                    set: { model.amount = $0; model.isAmountTouched = true }
+                ), isEditable: isEditableAmount)
+                if let error = model.amountError {
+                    Text(error)
                         .font(WBFont.description)
-                        .foregroundStyle(WBColor.textSecondary)
+                        .foregroundStyle(WBColor.declined)
                 }
             }
-            .padding(.horizontal, WBSpace.x4)
-            .padding(.bottom, WBSpace.x2)
+        } details: {
+            VStack(spacing: WBSpace.x2) {
+                if isEditableAmount, !model.quickAmounts.isEmpty {
+                    SuggestionChips(values: model.quickAmounts.map(Money.rub), onLightBackground: false) { picked in
+                        if let amount = model.quickAmounts.first(where: { Money.rub($0) == picked }) {
+                            model.applyQuickAmount(amount)
+                        }
+                    }
+                }
+                tiles
+                if spec.id == "requisites-budget" { urgentTransfer }
+                Text(recipient.timing)
+                    .font(WBFont.description)
+                    .foregroundStyle(WBColor.textSecondary)
+            }
         }
-        .background(WBColor.bgBase, ignoresSafeAreaEdges: .all)
         .sheet(isPresented: $model.isMethodSheetPresented) {
             AccountPickerSheet(
                 accounts: model.accounts,
@@ -83,9 +90,6 @@ struct ServiceAmountScreen: View {
             } else if !isEditableAmount {
                 model.applyQuickAmount(model.stagesAmount)
             }
-            if isEditableAmount {
-                isAmountFocused = true
-            }
             if appliesDemoLaunchState && SandboxSettings.startsWithOutcome {
                 Task {
                     try? await Task.sleep(for: .milliseconds(250))
@@ -110,38 +114,14 @@ struct ServiceAmountScreen: View {
 
     // MARK: - Сумма
 
-    private var amount: some View {
-        HStack(alignment: .firstTextBaseline, spacing: WBSpace.x1) {
-            if isEditableAmount {
-                TextField("0", text: Binding(
-                    get: { model.amount.displayInteger + (model.amount.displayFraction ?? "") },
-                    set: { model.setAmount($0) }
-                ))
-                .font(WBFont.balance)
-                .foregroundStyle(WBColor.textPrimary)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .tint(WBColor.textAccent)
-                .focused($isAmountFocused)
-                .fixedSize()
-            } else {
-                Text(Money.plain(model.baseAmount))
-                    .font(WBFont.balance)
-                    .foregroundStyle(WBColor.textPrimary)
-                    .contentTransition(.numericText())
-            }
-
-            Text("₽")
-                .font(WBFont.balance)
-                .foregroundStyle(WBColor.controlsTertiary)
+    private func pay() {
+        model.didAttemptSubmit = true
+        guard model.baseAmount > 0, model.amountError == nil else { return }
+        if model.total + urgentFee > (model.selectedAccount?.balance ?? 0) {
+            model.isMethodSheetPresented = true
+        } else {
+            model.isOutcomePresented = true
         }
-        .frame(height: WBLineHeight.balance)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            guard isEditableAmount else { return }
-            isAmountFocused = true
-        }
-        .animation(.snappy(duration: 0.2), value: model.baseAmount)
     }
 
     /// Вторая строка кнопки: комиссия считается от набранной суммы, поэтому
@@ -151,6 +131,12 @@ struct ServiceAmountScreen: View {
     }
 
     private var urgentFee: Decimal { isUrgent ? 199 : 0 }
+
+    private var shortfall: Decimal? {
+        guard model.baseAmount > 0, let balance = model.selectedAccount?.balance else { return nil }
+        let missing = model.total + urgentFee - balance
+        return missing > 0 ? missing : nil
+    }
 
     private var amountFeeBadge: BadgeSpec {
         let value = model.feeValue + urgentFee
@@ -164,56 +150,16 @@ struct ServiceAmountScreen: View {
     /// Стрелка нужна не для красоты — она отвечает на «в какую сторону уйдут
     /// деньги» до нажатия кнопки.
     private var tiles: some View {
-        HStack(spacing: 0) {
-            Button {
-                Haptics.tap()
-                model.isMethodSheetPresented = true
-            } label: {
-                tile(background: WBColor.bgPurpleLight) {
-                    if let account = model.selectedAccount {
-                        RowIconView(icon: account.icon, size: 24)
-                        Text(account.amountTitle)
-                            .font(WBFont.descriptionAccent)
-                            .foregroundStyle(WBColor.textPrimary)
-                        Text(spec.id == "requisites-budget" ? "WB Кошелёк" : account.subtitle)
-                            .font(WBFont.description)
-                            .foregroundStyle(WBColor.textSecondary)
-                            .lineLimit(1)
-                    }
-                }
-            }
-            .buttonStyle(.plain)
-
-            Image(systemName: "arrow.right")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(WBColor.textSecondary)
-                .frame(width: 28, height: 28)
-                .background(WBColor.bgBase, in: Circle())
-                .zIndex(1)
-                .padding(.horizontal, -WBSpace.x1)
-
-            tile(background: spec.id == "requisites-budget" ? WBColor.bgBlueLight : WBColor.bgMinus1) {
-                HStack(alignment: .top, spacing: WBSpace.x2) {
-                    RowIconView(icon: recipient.icon, size: 24)
-                    Spacer(minLength: 0)
-                    Button(action: onOpenSpec) {
-                        Image(systemName: "info.circle")
-                            .font(.system(size: 15))
-                            .foregroundStyle(WBColor.textSecondary)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-                Text(recipient.title)
-                    .font(WBFont.descriptionAccent)
-                    .foregroundStyle(WBColor.textPrimary)
-                    .lineLimit(1)
-                Text(model.paymentDestinationSubtitle)
-                    .font(WBFont.description)
-                    .foregroundStyle(WBColor.textSecondary)
-                    .lineLimit(1)
-            }
-        }
+        PipTransactionRouteCards(
+            source: model.selectedAccount.map(PipTransactionCardData.account) ?? .empty("Откуда"),
+            destination: PipTransactionCardData(
+                title: recipient.title,
+                subtitle: model.paymentDestinationSubtitle,
+                icon: recipient.icon
+            ),
+            onTapSource: { model.isMethodSheetPresented = true },
+            onTapDestination: onOpenSpec
+        )
     }
 
     private var urgentTransfer: some View {
@@ -237,18 +183,4 @@ struct ServiceAmountScreen: View {
         .padding(.horizontal, WBSpace.x3)
     }
 
-    private func tile<Content: View>(
-        background: Color,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: WBSpace.x1) {
-            content()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(WBSpace.x3)
-        .background(
-            background,
-            in: RoundedRectangle(cornerRadius: WBRadius.x4, style: .continuous)
-        )
-    }
 }

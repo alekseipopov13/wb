@@ -272,6 +272,15 @@ struct SandboxSectionScreen: View {
         case .pipDesignSystem:
             PipDesignSystemScreen { presented = nil }
 
+        case .pipTransactionComponents:
+            PipTransactionComponentsScreen { presented = nil }
+
+        case .favouritesReminder:
+            FavouritesReminderPreviewScreen { presented = nil }
+
+        case .favouritesComponents:
+            FavouritesComponentsPreviewScreen { presented = nil }
+
         case .uniQR:
             UniQRScreen(
                 onBack: { presented = nil },
@@ -309,6 +318,37 @@ struct SandboxSectionScreen: View {
         case .activationCodeStates:
             ActivationCodeStatesScreen(onClose: { presented = nil })
 
+        case .favouritesPayments(let scenario):
+            FavouritesPaymentsScreen(scenario: scenario, onBack: { presented = nil })
+
+        case .favouritesFolderExperiment:
+            FavouritesFolderExperimentScreen(onBack: { presented = nil })
+
+        case .operationDetails:
+            OperationDetailsScreen(onBack: { presented = nil })
+
+        case .favouritesAnimation(let example):
+            switch example {
+            case .reminder:
+                FavouritesReminderPreviewScreen(onClose: { presented = nil })
+            case .deckPull:
+                FavouritesDeckPullDemoScreen(onClose: { presented = nil })
+            case .headerMoveIn:
+                FavouritesHeaderMoveInDemoScreen(onClose: { presented = nil })
+            case .headerFlight:
+                FavouritesHeaderFlightDemoScreen(onClose: { presented = nil })
+            case .gridInsertion:
+                FavouritesGridInsertionDemoScreen(onClose: { presented = nil })
+            case .promotion:
+                FavouritesPromotionDemoScreen(onClose: { presented = nil })
+            case .wiggle:
+                FavouritesWiggleDemoScreen(onClose: { presented = nil })
+            case .removal:
+                FavouritesRemovalDemoScreen(onClose: { presented = nil })
+            case .heart:
+                FavouritesHeartPopDemoScreen(onClose: { presented = nil })
+            }
+
         case .iconMorph:
             NavigationStack {
                 IconMorphScreen()
@@ -328,7 +368,7 @@ struct SandboxSectionScreen: View {
 
 /// Держит состояние формы и спеку рядом: спека открывается шитом поверх формы,
 /// чтобы сверять таблицу с экраном не по памяти.
-private struct ServiceFormHost: View {
+struct ServiceFormHost: View {
     @State private var model: ServiceFormModel
     @State private var isSpecPresented = false
     private let onBack: () -> Void
@@ -436,7 +476,7 @@ private struct ServiceStagesWorkHost: View {
 // MARK: - Владелец модели транзакционного экрана
 
 /// Держит `TransactionModel` в `@State`, чтобы состояние жило между перерисовками.
-private struct TransactionHost: View {
+struct TransactionHost: View {
     @State private var model: TransactionModel
     private let onBack: () -> Void
 

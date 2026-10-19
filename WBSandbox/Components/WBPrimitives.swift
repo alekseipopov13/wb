@@ -43,7 +43,7 @@ struct RowIconView: View {
                         .frame(width: size, height: size)
                         .clipShape(RoundedRectangle(cornerRadius: size * 0.3, style: .continuous))
                 }
-        case .logo(let name, let logo, let background, let radius, let offset):
+        case .logo(let name, let logo, let background, let radius, let offset, let foreground):
             // Подложка и логотип живут отдельно: в макете это заливка плитки и
             // вектор поверх неё, и оба масштабируются вместе с размером строки.
             RoundedRectangle(cornerRadius: size * radius, style: .continuous)
@@ -51,8 +51,10 @@ struct RowIconView: View {
                 .frame(width: size, height: size)
                 .overlay {
                     Image(name)
+                        .renderingMode(foreground == nil ? .original : .template)
                         .resizable()
                         .frame(width: size * logo.width, height: size * logo.height)
+                        .foregroundStyle(foreground ?? WBColor.textPrimary)
                         .offset(x: size * offset.width, y: size * offset.height)
                 }
         case .symbol(let name, let tint, let background):
@@ -67,6 +69,37 @@ struct RowIconView: View {
                         .foregroundStyle(tint)
                 }
         }
+    }
+}
+
+// MARK: - Платёжная карточка 24 / title / subtitle
+
+/// Общий формат компактной карточки из компонента Transfer:
+/// иконка 24 pt сверху, две строки 13/17 снизу, padding 12, радиус 16.
+struct WBPaymentInfoCard<Icon: View, Title: View, Subtitle: View>: View {
+    let background: Color
+    @ViewBuilder var icon: Icon
+    @ViewBuilder var title: Title
+    @ViewBuilder var subtitle: Subtitle
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            icon
+
+            Spacer(minLength: 0)
+
+            VStack(alignment: .leading, spacing: 0) {
+                title
+                    .frame(height: 17)
+                subtitle
+                    .lineLimit(1)
+                    .frame(height: 17)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(WBSpace.x3)
+        .frame(height: 96)
+        .background(background, in: RoundedRectangle(cornerRadius: WBRadius.x4, style: .continuous))
     }
 }
 
@@ -307,6 +340,7 @@ struct WBPrimaryButton: View {
     /// Размер заголовка. По умолчанию сохраняем прежний вариант компонента;
     /// этап выбора счёта использует action-токен 17 pt из Figma.
     var titleSize: CGFloat = 16
+    var titleFont: Font? = nil
     var fill: Color = WBColor.ctaFill
     var isEnabled: Bool = true
     let action: () -> Void
@@ -318,7 +352,7 @@ struct WBPrimaryButton: View {
         } label: {
             VStack(spacing: 0) {
                 Text(title)
-                    .font(.system(size: titleSize, weight: subtitle == nil ? .medium : .semibold))
+                    .font(titleFont ?? .system(size: titleSize, weight: subtitle == nil ? .medium : .semibold))
                 if let subtitle {
                     Text(subtitle)
                         .font(.system(size: 14, weight: .regular))

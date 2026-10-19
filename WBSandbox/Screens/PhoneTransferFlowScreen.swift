@@ -150,21 +150,40 @@ struct PhoneTransferFlowScreen: View {
                 .font(WBFont.hauss(24, .bold))
                 .foregroundStyle(WBColor.textPrimary)
 
-            VStack(spacing: 0) {
-                ForEach(banks) { bank in
-                    DetailRowView(
-                        row: DetailRow(
-                            id: bank.id,
-                            icon: bank.icon,
-                            top: .primary(bank.title),
-                            bottom: .secondary("Доступен перевод по СБП"),
-                            showsChevron: false
-                        ),
-                        onTap: { openAmount(for: bank) }
-                    )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: WBSpace.x2) {
+                    ForEach(banks) { bank in
+                        bankCard(bank)
+                    }
                 }
+                .padding(.vertical, WBSpace.x1)
             }
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         }
+    }
+
+    private func bankCard(_ bank: BankOption) -> some View {
+        Button {
+            Haptics.tap()
+            openAmount(for: bank)
+        } label: {
+            WBPaymentInfoCard(background: WBColor.bgLevel2) {
+                RowIconView(icon: bank.icon, size: 24)
+            } title: {
+                Text(bank.title)
+                    .font(WBFont.descriptionAccent)
+                    .foregroundStyle(WBColor.textPrimary)
+                    .lineLimit(1)
+            } subtitle: {
+                Text("Перевод по СБП")
+                    .font(WBFont.description)
+                    .foregroundStyle(WBColor.textPrimary)
+            }
+            .frame(width: 160)
+            .contentShape(RoundedRectangle(cornerRadius: WBRadius.x4, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(bank.title), перевод по СБП")
     }
 
     private var recipientQuery: Binding<String> {

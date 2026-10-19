@@ -5,8 +5,10 @@ struct UniQRScreen: View {
     var onBack: () -> Void = {}
     var bonusAnimationStyle: UniQRBonusAnimationStyle = .rollOnly
     var configuration: UniQRConfiguration = .qrDemo
-    var onPay: () -> Void = {}
+    var onPay: (() -> Void)?
 
+    @State private var isOutcomePresented = false
+    @State private var didAttemptPay = false
     @State private var amountInput: AmountInput
     @State private var settledBonusPoints: Int
     @State private var isBonusCalculating = false
@@ -26,7 +28,7 @@ struct UniQRScreen: View {
         onBack: @escaping () -> Void = {},
         bonusAnimationStyle: UniQRBonusAnimationStyle = .rollOnly,
         configuration: UniQRConfiguration = .qrDemo,
-        onPay: @escaping () -> Void = {}
+        onPay: (() -> Void)? = nil
     ) {
         self.onBack = onBack
         self.bonusAnimationStyle = bonusAnimationStyle
@@ -40,12 +42,12 @@ struct UniQRScreen: View {
 
     private var sourceAccount: UniQRTransferAccount? {
         guard let sourceAccountID else { return nil }
-        return configuration.transferAccounts.first { $0.id == sourceAccountID }
+        return transferAccounts.first { $0.id == sourceAccountID }
     }
 
     private var destinationAccount: UniQRTransferAccount? {
         guard let destinationAccountID else { return nil }
-        return configuration.transferAccounts.first { $0.id == destinationAccountID }
+        return transferAccounts.first { $0.id == destinationAccountID }
     }
 
     private var currentBonusPoints: Int {
@@ -63,76 +65,125 @@ struct UniQRScreen: View {
         configuration.isAmountEditable && selectedRail.earnsBonus && isBonusCalculating
     }
 
+    private var transferAccounts: [UniQRTransferAccount] {
+        configuration.transferAccounts.isEmpty ? UniQRTransferAccount.demoAccounts : configuration.transferAccounts
+    }
+
     var body: some View {
-        GeometryReader { proxy in
-            let contentWidth = min(proxy.size.width, 390)
-
-            ZStack(alignment: .top) {
-                WBColor.bgBase
-                    .ignoresSafeArea()
-
-                VStack(spacing: 0) {
-                    UniQRNavBar(title: configuration.title, onBack: onBack)
-
-                    VStack {
-                        UniQRAmountBlock(
-                            amount: configuration.amount,
-                            amountInput: $amountInput,
-                            isAmountEditable: configuration.isAmountEditable,
-                            amountFocus: $isAmountFocused,
-                            bonusPoints: currentBonusPoints,
-                            isBonusActive: selectedRail.earnsBonus,
-                            isBonusCalculating: shouldSpinBonus,
-                            showsBonus: configuration.showsBonus,
-                            bonusAnimationStyle: bonusAnimationStyle,
-                            bonusBadgeContent: configuration.bonusBadgeContent,
-                            onAmountChange: setAmount
-                        )
+        ZStack(alignment: .bottom) {
+            PipTransactionLayout(
+                title: configuration.title,
+                buttonTitle: configuration.buttonTitle,
+                buttonSubtitle: configuration.buttonSubtitle,
+                onBack: onBack,
+                onPay: pay
+            ) {
+                VStack(spacing: WBSpace.x2) {
+                    UniQRAmountBlock(
+                        amountInput: $amountInput,
+                        isAmountEditable: configuration.isAmountEditable,
+                        amountFocus: $isAmountFocused,
+                        bonusPoints: currentBonusPoints,
+                        isBonusActive: selectedRail.earnsBonus,
+                        isBonusCalculating: shouldSpinBonus,
+                        showsBonus: configuration.showsBonus,
+                        bonusAnimationStyle: bonusAnimationStyle,
+                        bonusBadgeContent: configuration.bonusBadgeContent,
+                        onAmountChange: setAmount
+                    )
+                    if didAttemptPay && amountInput.decimal <= 0 {
+                        Text("Введите сумму")
+                            .font(WBFont.description)
+                            .foregroundStyle(WBColor.declined)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                    UniQRDownSection(
-                        selection: $selectedRail,
-                        configuration: configuration,
-                        sourceAccount: sourceAccount,
-                        destinationAccount: destinationAccount,
+                }
+            } details: {
+                VStack(spacing: WBSpace.x4) {
+                    if configuration.showsPaymentSwitch {
+                        UniQRPaymentSwitch(selection: $selectedRail)
+                    }
+                    PipTransactionRouteCards(
+                        source: sourceAccount?.cardData ?? .empty("Откуда"),
+                        destination: destinationCard,
                         sourceAttentionProgress: sourceAttentionProgress,
                         destinationAttentionProgress: destinationAttentionProgress,
-                        onTapSource: { openAccountPicker(.source) },
-                        onTapDestination: { openAccountPicker(.destination) },
-                        onPay: onPay
+                        onTapSource: configuration.allowsSourceSelection ? { openAccountPicker(.source) } : nil,
+                        onTapDestination: configuration.routeStyle == .betweenAccountsTransition
+                            ? { openAccountPicker(.destination) } : nil
                     )
                 }
-                .frame(width: contentWidth, height: proxy.size.height)
-                .frame(maxWidth: .infinity)
+            }
 
-                if isAccountPickerPresented {
+            if isAccountPickerPresented {
+                GeometryReader { proxy in
                     accountPickerOverlay(width: proxy.size.width)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                        .zIndex(1)
                 }
+                .ignoresSafeArea()
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                .zIndex(1)
             }
         }
-        .ignoresSafeArea()
         .onAppear {
             initializeTransferRouteIfNeeded()
             initializeEditableAmountIfNeeded()
         }
-        .onDisappear {
-            bonusCalculationTask?.cancel()
-        }
-        .onChange(of: selectedRail) { _, newValue in
-            handleRailChange(newValue)
+        .onDisappear { bonusCalculationTask?.cancel() }
+        .onChange(of: selectedRail) { _, newValue in handleRailChange(newValue) }
+        .fullScreenCover(isPresented: $isOutcomePresented) {
+            OutcomeScreen(
+                scenario: outcomeScenario,
+                amount: amountInput.decimal,
+                badge: BadgeSpec(text: "Без комиссии", style: .greenSoft),
+                onClose: { isOutcomePresented = false }
+            )
         }
     }
 
+    private var destinationCard: PipTransactionCardData {
+        if configuration.routeStyle == .betweenAccountsTransition {
+            return destinationAccount?.cardData ?? .empty("Куда")
+        }
+        return PipTransactionCardData(
+            title: configuration.recipientTitle,
+            subtitle: configuration.recipientSubtitle,
+            icon: configuration.recipientIcon.rowIcon
+        )
+    }
+
+    private func pay() {
+        didAttemptPay = true
+        guard amountInput.decimal > 0 else { return }
+        guard sourceAccount != nil else { openAccountPicker(.source); return }
+        if configuration.routeStyle == .betweenAccountsTransition, destinationAccount == nil {
+            openAccountPicker(.destination)
+            return
+        }
+        isAmountFocused = false
+        if let onPay { onPay() } else { isOutcomePresented = true }
+    }
+
+    private var outcomeScenario: OutcomeScenario {
+        OutcomeScenario(
+            id: "uniqr-processing",
+            demoName: configuration.title,
+            outcome: .processing,
+            source: configuration.routeStyle == .betweenAccountsTransition
+                ? TransferModes.betweenAccounts : TransferModes.qr,
+            override: SuccessConfig(
+                title: TransactionOutcome.processing.title,
+                subtitle: "Со счёта " + (sourceAccount?.subtitle ?? ""),
+                icon: destinationCard.icon,
+                counterparty: destinationAccount?.subtitle ?? configuration.recipientTitle,
+                chip: configuration.routeStyle == .betweenAccountsTransition ? nil : configuration.recipientSubtitle
+            )
+        )
+    }
+
     private func initializeTransferRouteIfNeeded() {
-        guard configuration.routeStyle == .betweenAccountsTransition,
-              !didInitializeTransferRoute
-        else { return }
+        guard !didInitializeTransferRoute else { return }
         didInitializeTransferRoute = true
         sourceAccountID = configuration.initialTransferSourceID
-            ?? configuration.transferAccounts.first?.id
+            ?? transferAccounts.first?.id
     }
 
     private func initializeEditableAmountIfNeeded() {
@@ -197,11 +248,7 @@ struct UniQRScreen: View {
     }
 
     private static func amountInput(from raw: String) -> AmountInput {
-        let digits = raw.filter(\.isNumber)
-        guard let value = Decimal(string: String(digits.prefix(9))) else {
-            return AmountInput(0)
-        }
-        return AmountInput(value)
+        AmountInput(raw: raw)
     }
 
     private static func cashbackPoints(for amount: Decimal) -> Int {
@@ -212,6 +259,7 @@ struct UniQRScreen: View {
 
     private func openAccountPicker(_ slot: UniQRTransferSlot) {
         Haptics.tap()
+        isAmountFocused = false
         accountPickerSlot = slot
         withAnimation(.snappy(duration: 0.24)) {
             isAccountPickerPresented = true
@@ -303,7 +351,7 @@ struct UniQRScreen: View {
 
             UniQRAccountPickerSheet(
                 title: accountPickerSlot.sheetTitle,
-                accounts: configuration.transferAccounts,
+                accounts: transferAccounts,
                 width: width,
                 onSelect: selectTransferAccount,
                 onClose: closeAccountPicker
@@ -329,6 +377,8 @@ struct UniQRConfiguration {
     var buttonSubtitle: String = "Без комиссии"
     var transferAccounts: [UniQRTransferAccount] = []
     var initialTransferSourceID: String?
+    /// У eSIM внешний сценарий пока поддерживает только кошелёк.
+    var allowsSourceSelection = true
 
     static let qrDemo = UniQRConfiguration(
         title: "Оплатить по QR-коду",
@@ -366,13 +416,15 @@ struct UniQRConfiguration {
             showsPaymentSwitch: false,
             recipientTitle: destination,
             recipientSubtitle: subtitle,
-            recipientIcon: flagAsset.map(UniQRRecipientIcon.asset) ?? .placeholder
+            recipientIcon: flagAsset.map(UniQRRecipientIcon.asset) ?? .placeholder,
+            allowsSourceSelection: false
         )
     }
 
     static let betweenAccountsTransition = UniQRConfiguration(
         title: "Перевести",
         amount: 1_000,
+        isAmountEditable: true,
         showsBonus: false,
         showsPaymentSwitch: false,
         recipientTitle: "Куда",
@@ -393,6 +445,28 @@ enum UniQRRecipientIcon {
     case wbAccount
     case savingsAccount
     case emptySlot
+}
+
+extension UniQRRecipientIcon {
+    var rowIcon: RowIcon {
+        switch self {
+        case .flower:
+            return .logo("dsFlowerTulip16", size: CGSize(width: 2.0 / 3, height: 2.0 / 3),
+                         background: WBColor.ctaTopUp, radius: 1.0 / 3, offset: .zero)
+        case .asset(let name): return .asset(name)
+        case .placeholder: return .placeholder
+        case .wbAccount: return .asset("icAccountWB")
+        case .savingsAccount: return .logo("icSafe", size: CGSize(width: 0.6, height: 0.6),
+                                          background: WBColor.textAccent, radius: 0.3, offset: .zero, foreground: .white)
+        case .emptySlot: return PipTransactionCardData.empty("Куда").icon
+        }
+    }
+}
+
+extension UniQRTransferAccount {
+    var cardData: PipTransactionCardData {
+        PipTransactionCardData(title: title, subtitle: subtitle, icon: icon.rowIcon, background: background)
+    }
 }
 
 enum UniQRBonusAnimationStyle {
@@ -476,50 +550,9 @@ private enum UniQRPaymentRail: String, CaseIterable, Identifiable {
     var earnsBonus: Bool { bonusPoints > 0 }
 }
 
-// MARK: - Navbar
-
-private struct UniQRNavBar: View {
-    let title: String
-    var onBack: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Color.clear
-                .frame(width: 390, height: 44)
-
-            ZStack {
-                Text(title)
-                    .font(WBFont.hauss(17, .semibold))
-                    .foregroundStyle(WBColor.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 56)
-
-                HStack {
-                    Button(action: onBack) {
-                        Image("dsChevronLeft24")
-                            .renderingMode(.template)
-                            .resizable()
-                            .frame(width: 24, height: 24)
-                            .foregroundStyle(WBColor.textPrimary)
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-
-                    Spacer(minLength: 0)
-                }
-                .padding(.horizontal, 2)
-            }
-            .frame(width: 390, height: 48)
-        }
-        .frame(width: 390, height: 92)
-    }
-}
-
 // MARK: - Amount
 
 private struct UniQRAmountBlock: View {
-    let amount: Int
     @Binding var amountInput: AmountInput
     let isAmountEditable: Bool
     var amountFocus: FocusState<Bool>.Binding
@@ -533,40 +566,13 @@ private struct UniQRAmountBlock: View {
 
     var body: some View {
         VStack(spacing: WBSpace.x2) {
-            HStack(alignment: .lastTextBaseline, spacing: WBSpace.x1_5) {
-                if isAmountEditable {
-                    TextField("0", text: Binding(
-                        get: {
-                            amountInput.displayInteger
-                                + (amountInput.displayFraction ?? "")
-                        },
-                        set: onAmountChange
-                    ))
-                    .font(WBFont.balance)
-                    .foregroundStyle(WBColor.textPrimary)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.trailing)
-                    .tint(WBColor.textAccent)
-                    .focused(amountFocus)
-                    .fixedSize()
-                } else {
-                    Text(amount.formatted(.number.grouping(.automatic)))
-                        .foregroundStyle(WBColor.textPrimary)
-                        .contentTransition(.numericText())
+            PipTransactionAmount(input: Binding(
+                get: { amountInput },
+                set: { value in
+                    amountInput = value
+                    onAmountChange(value.displayInteger + (value.displayFraction ?? ""))
                 }
-
-                Text("₽")
-                    .foregroundStyle(WBColor.textSecondary)
-            }
-            .font(WBFont.balance)
-            .lineLimit(1)
-            .frame(height: 44)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                guard isAmountEditable else { return }
-                amountFocus.wrappedValue = true
-            }
-            .animation(.snappy(duration: 0.2), value: amountInput)
+            ), isEditable: isAmountEditable, focus: amountFocus)
 
             if showsBonus {
                 UniQRBonusBadgeView(
@@ -1103,48 +1109,6 @@ private struct UniQRVBLogoCapsule: View {
 
 // MARK: - Payment Switch
 
-private struct UniQRDownSection: View {
-    @Binding var selection: UniQRPaymentRail
-    let configuration: UniQRConfiguration
-    let sourceAccount: UniQRTransferAccount?
-    let destinationAccount: UniQRTransferAccount?
-    let sourceAttentionProgress: CGFloat
-    let destinationAttentionProgress: CGFloat
-    let onTapSource: () -> Void
-    let onTapDestination: () -> Void
-    let onPay: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            if configuration.showsPaymentSwitch {
-                UniQRPaymentSwitch(selection: $selection)
-                    .padding(.top, WBSpace.x2)
-                    .padding(.bottom, WBSpace.x4)
-                    .padding(.horizontal, WBSpace.x4)
-            }
-
-            UniQRRouteCards(
-                configuration: configuration,
-                sourceAccount: sourceAccount,
-                destinationAccount: destinationAccount,
-                sourceAttentionProgress: sourceAttentionProgress,
-                destinationAttentionProgress: destinationAttentionProgress,
-                onTapSource: onTapSource,
-                onTapDestination: onTapDestination
-            )
-                .padding(.horizontal, WBSpace.x4)
-                .padding(.bottom, WBSpace.x2)
-
-            UniQRBottomBar(
-                title: configuration.buttonTitle,
-                subtitle: configuration.buttonSubtitle,
-                onPay: onPay
-            )
-        }
-        .frame(width: 390)
-    }
-}
-
 private struct UniQRPaymentSwitch: View {
     @Binding var selection: UniQRPaymentRail
 
@@ -1185,274 +1149,6 @@ private struct UniQRChip: View {
         }
         .buttonStyle(.plain)
         .animation(.snappy(duration: 0.28), value: isSelected)
-    }
-}
-
-// MARK: - Route Cards
-
-private struct UniQRRouteCards: View {
-    let configuration: UniQRConfiguration
-    let sourceAccount: UniQRTransferAccount?
-    let destinationAccount: UniQRTransferAccount?
-    let sourceAttentionProgress: CGFloat
-    let destinationAttentionProgress: CGFloat
-    let onTapSource: () -> Void
-    let onTapDestination: () -> Void
-
-    var body: some View {
-        ZStack {
-            HStack(spacing: WBSpace.x3) {
-                switch configuration.routeStyle {
-                case .payment:
-                    UniQRWalletCard()
-                        .frame(maxWidth: .infinity)
-
-                    UniQRRecipientCard(configuration: configuration)
-                        .frame(maxWidth: .infinity)
-                case .betweenAccountsTransition:
-                    Button(action: onTapSource) {
-                        UniQRTransferAccountCard(
-                            account: sourceAccount,
-                            placeholderTitle: "Откуда",
-                            attentionProgress: sourceAttentionProgress
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity)
-                    .modifier(UniQRPremiumAttentionEffect(progress: sourceAttentionProgress))
-                    .accessibilityLabel("Откуда")
-                    .accessibilityAddTraits(.isButton)
-
-                    Button(action: onTapDestination) {
-                        UniQRTransferAccountCard(
-                            account: destinationAccount,
-                            placeholderTitle: "Куда",
-                            attentionProgress: destinationAttentionProgress
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity)
-                    .modifier(UniQRPremiumAttentionEffect(progress: destinationAttentionProgress))
-                    .accessibilityLabel("Куда")
-                    .accessibilityAddTraits(.isButton)
-                }
-            }
-
-            Circle()
-                .fill(WBColor.bgBase)
-                .frame(width: 24, height: 24)
-                .overlay {
-                    Image("dsArrowRight16")
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 16, height: 16)
-                        .foregroundStyle(WBColor.textPrimary)
-                }
-        }
-        .frame(height: 96)
-    }
-}
-
-private struct UniQRTransferAccountCard: View {
-    let account: UniQRTransferAccount?
-    let placeholderTitle: String
-    var attentionProgress: CGFloat = 0
-
-    private var background: Color {
-        account?.background ?? WBColor.bgLevel2
-    }
-
-    private var iconPop: CGFloat {
-        guard account == nil else { return 0 }
-        let progress = attentionProgress.uniQRClampedUnit
-        return max(0, sin(progress * .pi * 1.65)) * max(0, 1 - progress * 0.36)
-    }
-
-    var body: some View {
-        UniQRInfoCard(background: background) {
-            UniQRRecipientIconView(icon: account?.icon ?? .emptySlot)
-                .scaleEffect(1 + iconPop * 0.055)
-        } title: {
-            Text(account?.title ?? placeholderTitle)
-                .font(WBFont.descriptionAccent)
-                .foregroundStyle(WBColor.textPrimary)
-                .lineLimit(1)
-        } subtitle: {
-            Text(account?.subtitle ?? "Счёт или банк")
-                .font(WBFont.description)
-                .foregroundStyle(WBColor.textPrimary)
-                .lineLimit(1)
-        }
-    }
-}
-
-private struct UniQRWalletCard: View {
-    var body: some View {
-        UniQRInfoCard(background: WBColor.bgAccentSecondaryLight) {
-            UniQRWBPayIcon()
-        } title: {
-            Text("1 235 ₽")
-                .font(WBFont.descriptionAccent)
-                .foregroundStyle(WBColor.textPrimary)
-        } subtitle: {
-            Text("WB Кошелёк")
-                .font(WBFont.description)
-                .foregroundStyle(WBColor.textPrimary)
-        }
-    }
-}
-
-private struct UniQRRecipientCard: View {
-    let configuration: UniQRConfiguration
-
-    var body: some View {
-        UniQRInfoCard(background: WBColor.bgMinus1) {
-            UniQRRecipientIconView(icon: configuration.recipientIcon)
-        } title: {
-            Text(configuration.recipientTitle)
-                .font(WBFont.descriptionAccent)
-                .foregroundStyle(WBColor.textPrimary)
-                .lineLimit(1)
-        } subtitle: {
-            Text(configuration.recipientSubtitle)
-                .font(WBFont.description)
-                .foregroundStyle(WBColor.textPrimary)
-        }
-    }
-}
-
-private struct UniQRRecipientIconView: View {
-    let icon: UniQRRecipientIcon
-
-    var body: some View {
-        switch icon {
-        case .flower:
-            RoundedRectangle(cornerRadius: WBSpace.x2, style: .continuous)
-                .fill(WBColor.ctaTopUp)
-                .frame(width: 24, height: 24)
-                .overlay {
-                    Image("dsFlowerTulip16")
-                        .resizable()
-                        .frame(width: 16, height: 16)
-                }
-        case .asset(let name):
-            Image(name)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 24, height: 24)
-                .clipShape(RoundedRectangle(cornerRadius: 7.2, style: .continuous))
-        case .placeholder:
-            RoundedRectangle(cornerRadius: 7.2, style: .continuous)
-                .fill(WBColor.textSecondary.opacity(0.18))
-                .frame(width: 24, height: 24)
-        case .wbAccount:
-            Image("icAccountWB")
-                .resizable()
-                .frame(width: 24, height: 24)
-        case .savingsAccount:
-            RoundedRectangle(cornerRadius: 7.2, style: .continuous)
-                .fill(WBColor.textAccent)
-                .frame(width: 24, height: 24)
-                .overlay {
-                    Image("icSafe")
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 14.4, height: 14.4)
-                        .foregroundStyle(.white)
-                }
-        case .emptySlot:
-            RoundedRectangle(cornerRadius: 7.2, style: .continuous)
-                .fill(WBColor.controlsSecondary)
-                .frame(width: 24, height: 24)
-                .overlay {
-                    Image("dsPlusBold15")
-                        .renderingMode(.template)
-                        .resizable()
-                        .frame(width: 15, height: 15)
-                        .foregroundStyle(Color(hex: 0xF6F6F9))
-                }
-        }
-    }
-}
-
-private struct UniQRInfoCard<Icon: View, Title: View, Subtitle: View>: View {
-    let background: Color
-    @ViewBuilder var icon: Icon
-    @ViewBuilder var title: Title
-    @ViewBuilder var subtitle: Subtitle
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            icon
-
-            Spacer(minLength: 0)
-
-            VStack(alignment: .leading, spacing: 0) {
-                title
-                    .frame(height: 17)
-                subtitle
-                    .lineLimit(1)
-                    .frame(height: 17)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(WBSpace.x3)
-        .frame(height: 96)
-        .background(background, in: RoundedRectangle(cornerRadius: WBRadius.x4, style: .continuous))
-    }
-}
-
-private struct UniQRWBPayIcon: View {
-    var body: some View {
-        Image("uniQRWBLogo24")
-            .resizable()
-            .frame(width: 24, height: 24)
-    }
-}
-
-// MARK: - Bottom Bar
-
-private struct UniQRBottomBar: View {
-    let title: String
-    let subtitle: String
-    let onPay: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Button {
-                Haptics.tap()
-                onPay()
-            } label: {
-                VStack(spacing: 0) {
-                    Text(title)
-                        .font(WBFont.hauss(17, .medium))
-                        .frame(height: 20)
-
-                    if !subtitle.isEmpty {
-                        Text(subtitle)
-                            .font(WBFont.description)
-                            .foregroundStyle(Color(hex: 0xF6F6F9).opacity(0.64))
-                            .frame(height: 17)
-                    }
-                }
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(WBColor.ctaFill, in: RoundedRectangle(cornerRadius: WBRadius.x5, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .padding(.top, WBSpace.x2)
-            .padding(.horizontal, WBSpace.x2)
-            .padding(.bottom, WBSpace.x3)
-
-            Image("dsHomeIndicator")
-                .resizable()
-                .frame(width: 390, height: 34)
-        }
-        .frame(width: 390, height: 106, alignment: .top)
-        .background(WBColor.bgBase)
     }
 }
 
@@ -1634,7 +1330,7 @@ private struct UniQRSheetAccountIcon: View {
                         .foregroundStyle(.white)
                 }
         default:
-            UniQRRecipientIconView(icon: icon)
+            RowIconView(icon: icon.rowIcon, size: 24)
                 .frame(width: 40, height: 40)
         }
     }
@@ -1695,23 +1391,6 @@ private struct UniQRBankCard: View {
                         .frame(width: 13, height: 13)
                 }
         }
-    }
-}
-
-private struct UniQRPremiumAttentionEffect: GeometryEffect {
-    var progress: CGFloat
-
-    var animatableData: CGFloat {
-        get { progress }
-        set { progress = newValue }
-    }
-
-    func effectValue(size: CGSize) -> ProjectionTransform {
-        let t = progress.uniQRClampedUnit
-        // One damped spring impulse: left, smaller right, smaller left, then rest.
-        let spring = -13 * exp(-1.45 * t) * sin(3 * .pi * t)
-        let settle = t < 0.82 ? 1 : max(0, 1 - pow((t - 0.82) / 0.18, 2))
-        return ProjectionTransform(CGAffineTransform(translationX: spring * settle, y: 0))
     }
 }
 
