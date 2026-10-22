@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "date": "2026-10-22",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
@@ -18,7 +18,8 @@
     ],
     "rounding": "nearest integer",
     "restart": "current interpolated float",
-    "reducedMotionDuration": 0
+    "reducedMotionDuration": 0,
+    "valuesAreDemoOnly": true
   },
   "amountLayout": {
     "duration": 400,
@@ -28,7 +29,7 @@
       0.36,
       1
     ],
-    "target": "measured final decimal cells + 8px gap + currency cell; no reserved leading cell in target measurement",
+    "target": "measure actual formatted target with current typography + currency gap + currency cell",
     "extraCurrencyGap": 8,
     "eyeGap": 8,
     "reducedMotionDuration": 0,
@@ -37,7 +38,6 @@
     "thousandsCellEm": 0.2,
     "currencyCellEm": 0.65,
     "currencyTrackingEm": -0.04,
-    "renderMinimumDigits": 6,
     "visuallyHiddenCurrencySpace": true,
     "sectionHeight": 117,
     "lineHeight": 65,
@@ -46,7 +46,12 @@
     "centerOffset": 6,
     "segmentToLineGap": 12,
     "lineToCarouselGap": 12,
-    "eyeSize": 24
+    "eyeSize": 24,
+    "digitCount": "from amount data; not fixed at five or six",
+    "grouping": "from active formatter; align separators by decimal place during transition",
+    "transitionReserve": "derive from current visible amount and new target; exclude empty cells from final width",
+    "sameMeasuredWidth": "count only; no layout displacement",
+    "center": "centre of available container after padding; 201px is only the 390px demo"
   },
   "carousel": {
     "duration": 400,
@@ -81,5 +86,14 @@
       "opacityDuration": 150,
       "delay": 0
     }
+  },
+  "prototypeLimitations": {
+    "renderMinimumDigits": 6,
+    "verifiedBalancePair": [
+      95775,
+      154261
+    ],
+    "variableGroupingTransitionsVerified": false,
+    "note": "Prototype reserve, not a product digit limit; general-width requirements need additional boundary tests"
   }
 }
