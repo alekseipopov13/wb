@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { animate, useReducedMotion } from 'motion/react';
+import { AmountDigits } from './AmountDigits';
 
 const formatter = new Intl.NumberFormat('ru-RU');
 
@@ -36,5 +37,5 @@ export function RollingAmount({ value }: { value: string }) {
   const amount = reduced ? target : displayed;
   const text = amount === target ? value : value.replace(/-?\d[\d\s\u00a0\u202f]*\d|-?\d/, formatter.format(amount).replace(/\u00a0/g, ' '));
   const currency = text.match(/\s*₽$/)?.[0] ?? '';
-  return <span className="rolling-amount"><span>{currency ? text.slice(0, -currency.length) : text}</span><span className="amount-currency">{currency}</span></span>;
+  return <span className="rolling-amount"><span className="amount-digit-viewport"><AmountDigits value={currency ? text.slice(0, -currency.length) : text} minimumDigits={6}/></span><span className="amount-currency"><span className="currency-text-space">{currency ? ' ' : ''}</span>{currency.trim()}</span></span>;
 }

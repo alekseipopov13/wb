@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "date": "2026-10-22",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
@@ -21,17 +21,32 @@
     "reducedMotionDuration": 0
   },
   "amountLayout": {
-    "duration": 500,
+    "duration": 400,
     "ease": [
-      0.625,
-      0.05,
-      0,
+      0.22,
+      1,
+      0.36,
       1
     ],
-    "target": "measured target string width + 6px",
-    "extraCurrencyGap": 6,
+    "target": "measured final decimal cells + 8px gap + currency cell; no reserved leading cell in target measurement",
+    "extraCurrencyGap": 8,
     "eyeGap": 8,
-    "reducedMotionDuration": 0
+    "reducedMotionDuration": 0,
+    "delay": 0,
+    "digitCellEm": 0.52,
+    "thousandsCellEm": 0.2,
+    "currencyCellEm": 0.65,
+    "currencyTrackingEm": -0.04,
+    "renderMinimumDigits": 6,
+    "visuallyHiddenCurrencySpace": true,
+    "sectionHeight": 117,
+    "lineHeight": 65,
+    "textLineHeight": 58,
+    "paddingLeft": 12,
+    "centerOffset": 6,
+    "segmentToLineGap": 12,
+    "lineToCarouselGap": 12,
+    "eyeSize": 24
   },
   "carousel": {
     "duration": 400,
@@ -59,7 +74,7 @@
     "cardWidth": 118,
     "cardHeight": 99,
     "maskHeight": 115,
-    "headerHeight": "455 + safe-area-inset-top",
+    "headerHeight": "458 + safe-area-inset-top",
     "reducedMotion": {
       "y": 0,
       "slotDuration": 0,

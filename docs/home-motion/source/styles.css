@@ -255,8 +255,34 @@
 .privacy-number-rolling .rolling-amount{display:grid;grid-template-columns:minmax(0,1fr) auto;width:100%}
 .rolling-amount>span:first-child{min-width:0;text-align:right}
 .amount-currency{position:relative}
-.privacy-number-rolling .rolling-amount{column-gap:6px}
-.animated-amount-width:has(.privacy-number-rolling) .amount-width-measure{padding-right:6px}
+.privacy-number-rolling .rolling-amount{column-gap:8px}
 .rolling-amount>span:first-child{display:flex;justify-content:flex-end}
 /* Keep glyph ink inside each mask despite the amount's negative tracking. */
 .amount-character-mask{flex-shrink:0;padding-inline:.1em;margin-inline:-.1em}
+/* Centre the amount and eye as one stable group. */
+#balance-panel:has(.balance-line-counting){width:100%}
+.unified .balance-line-counting{width:100%;height:65px;padding-left:12px}
+.balance-line-counting>.balance-number,.balance-line-counting>.hide-balance{flex:none}
+.amount-digits{display:inline-flex;flex:none;letter-spacing:0}
+.amount-digit-cell{display:inline-block;flex:none;width:.52em;text-align:center}
+.amount-space-cell{display:inline-block;flex:none;width:.2em;text-align:center}
+.privacy-number-rolling .amount-currency,.fixed-amount-measure .amount-currency{width:.65em;letter-spacing:-.04em;text-align:center}
+.animated-amount-width .fixed-amount-measure{display:inline-flex;gap:8px;padding-right:0}
+.fixed-amount-measure::before{content:none}
+
+.fixed-amount-measure [data-glyph]::before{content:attr(data-glyph)}
+
+/* Keep digits and currency in one flow; no clipping or detached anchors. */
+.amount-digit-viewport{overflow:visible}
+
+.currency-text-space{font-size:0;line-height:0}
+
+/* Balance spacing from Figma 60866:101353; comparison variant stays unchanged. */
+.unified .balance-section:has(.balance-line-counting){height:117px}
+.unified .bank-header:has(.balance-line-counting){height:calc(458px + env(safe-area-inset-top))}
+.unified .balance-section:has(.balance-line-counting)+#accounts-panel .account-carousel{margin-top:12px}
+/* Avoid extra inline baseline space accumulating around the animated spans. */
+.balance-line-counting .balance-number,
+.balance-line-counting .animated-amount-width,
+.balance-line-counting .privacy-number-rolling,
+.balance-line-counting .privacy-value{display:block}
