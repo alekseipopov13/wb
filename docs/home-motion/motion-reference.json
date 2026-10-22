@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "date": "2026-10-22",
+  "prototype": "https://lyosha.fun/wb-test/",
+  "units": {
+    "time": "ms",
+    "distance": "CSS px"
+  },
+  "balance": {
+    "any": 95775,
+    "wb": 154261,
+    "duration": 400,
+    "ease": [
+      0.22,
+      1,
+      0.36,
+      1
+    ],
+    "rounding": "nearest integer",
+    "restart": "current interpolated float",
+    "reducedMotionDuration": 0
+  },
+  "amountLayout": {
+    "duration": 500,
+    "ease": [
+      0.625,
+      0.05,
+      0,
+      1
+    ],
+    "target": "measured target string width + 6px",
+    "extraCurrencyGap": 6,
+    "eyeGap": 8,
+    "reducedMotionDuration": 0
+  },
+  "carousel": {
+    "duration": 400,
+    "ease": [
+      0.22,
+      1,
+      0.36,
+      1
+    ],
+    "visibleY": 0,
+    "hiddenY": 115,
+    "entryDelay": "100 + 45*i",
+    "exitDelay": "25*i",
+    "vtbEntryDelay": 100,
+    "vtbExitDelay": 0,
+    "slotDuration": 500,
+    "slotEase": [
+      0.4,
+      0,
+      0.2,
+      1
+    ],
+    "externalWidth": 132,
+    "shoppingWidth": "126*N",
+    "cardWidth": 118,
+    "cardHeight": 99,
+    "maskHeight": 115,
+    "headerHeight": "455 + safe-area-inset-top",
+    "reducedMotion": {
+      "y": 0,
+      "slotDuration": 0,
+      "opacityDuration": 150,
+      "delay": 0
+    }
+  }
+}

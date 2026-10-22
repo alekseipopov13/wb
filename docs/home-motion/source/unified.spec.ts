@@ -1,0 +1,30 @@
+import {test,expect} from '@playwright/test';
+test('unified balances exclude VTB and preserve carousel interactions',async({page})=>{
+ await page.goto('/wb-test/');
+ await expect(page.getByTestId('balance')).toHaveText('95 775 ₽');
+ const headerHeight = await page.locator('.bank-header').evaluate(el=>el.getBoundingClientRect().height);
+ await page.locator('#tab-shopping').click();
+ await expect(page.locator('.bank-header')).toHaveCSS('height',headerHeight+'px');
+ await expect(page.getByTestId('balance')).toHaveText('154 261 ₽');
+ await expect(page.locator('.mode-accounts-slot')).toHaveCSS('width','378px');
+ await expect(page.locator('.external-account-slot')).toHaveAttribute('inert','');
+ await expect(page.getByRole('button',{name:'5 000 ₽ Сертификаты',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'41 054 ₽ Накопления',exact:true})).toBeVisible();
+ await page.getByRole('tab',{name:'Для любых покупок'}).click();
+ await expect(page.getByTestId('balance')).toHaveText('95 775 ₽');
+ await expect(page.locator('.mode-accounts-slot')).toHaveCSS('width','132px');
+ await expect(page.locator('.external-account-slot')).toHaveCSS('width','132px');
+ await expect(page.locator('.external-account-slot')).not.toHaveAttribute('inert','');
+ await expect(page.getByRole('button',{name:'41 054 ₽ Накопления',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'5 000 ₽ Сертификаты',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Скрыть баланс'}).click();
+ await expect(page.locator('.external-account .privacy-value')).toHaveCSS('opacity','0');
+ await page.getByRole('button',{name:'Показать баланс'}).click();
+ await page.locator('#tab-shopping').click();
+ await expect(page.getByTestId('balance')).toHaveText('154 261 ₽');
+ await page.getByRole('button',{name:'5 000 ₽ Сертификаты',exact:true}).click();
+ await expect(page.locator('.empty-screen')).toBeVisible();await page.getByRole('button',{name:'Назад',exact:true}).click();
+ await expect(page.locator('.empty-screen')).toHaveCount(0);
+ for(const width of [320,390,430]){await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
+ await expect.poll(()=>page.locator('img').evaluateAll(xs=>xs.every(x=>(x as HTMLImageElement).complete&&(x as HTMLImageElement).naturalWidth>0))).toBe(true);
+});

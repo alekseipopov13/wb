@@ -1,0 +1,86 @@
+[
+  {
+    "mode": "shopping",
+    "target": 0,
+    "elapsed": 0,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "shopping",
+    "target": 100,
+    "elapsed": 100,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "shopping",
+    "target": 200,
+    "elapsed": 200,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "shopping",
+    "target": 300,
+    "elapsed": 300,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "shopping",
+    "target": 400,
+    "elapsed": 400,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "shopping",
+    "target": 500,
+    "elapsed": 500,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "shopping",
+    "target": 650,
+    "elapsed": 650,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "accounts",
+    "target": 0,
+    "elapsed": 0,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "accounts",
+    "target": 100,
+    "elapsed": 100,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "accounts",
+    "target": 200,
+    "elapsed": 200,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "accounts",
+    "target": 300,
+    "elapsed": 300,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "accounts",
+    "target": 400,
+    "elapsed": 400,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "accounts",
+    "target": 500,
+    "elapsed": 500,
+    "source": "rendered prototype, controlled browser clock"
+  },
+  {
+    "mode": "accounts",
+    "target": 650,
+    "elapsed": 650,
+    "source": "rendered prototype, controlled browser clock"
+  }
+]
