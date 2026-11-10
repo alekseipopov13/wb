@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "date": "2026-11-10",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
@@ -136,7 +136,7 @@
     "reducedMotion": "final number immediately; same font fit and fade rules"
   },
   "initialLoad": {
-    "status": "platform-neutral handoff; post-load motion demonstrated in wb-test",
+    "status": "platform-neutral motion specification; iOS and Android examples provided",
     "timeOrigin": "T = application content readiness event; all stages relative to T",
     "skeletonExit": {
       "startMs": 0,
@@ -186,9 +186,9 @@
       0.36,
       1
     ],
-    "transformOrigin": "50% 50%",
+    "transformOrigin": "card centre",
     "nominalReadyMs": 1280,
-    "headerHeight": "452 CSS px + safe-area-inset-top",
+    "headerHeight": "constant throughout the sequence; from current design",
     "shimmer": {
       "cycleMs": 2000,
       "sweepMs": 1000,
@@ -201,9 +201,7 @@
         25,
         50
       ],
-      "skewXDegrees": -15,
       "angleToHorizontalDegrees": -75,
-      "initialLeftPx": -150,
       "ease": "linear",
       "direction": "LTR",
       "baseColor": "#F6F6F9",
@@ -227,6 +225,11 @@
       "automaticTimeoutTransition": false,
       "waitForShimmerCycleEnd": false,
       "componentNames": "descriptive roles only; implementation names are unrestricted"
-    }
+    },
+    "examples": {
+      "ios": "examples/initial-load/InitialLoad.swift",
+      "android": "examples/initial-load/InitialLoad.kt"
+    },
+    "sizeUnits": "design units; corresponding pt on iOS and dp on Android"
   }
 }
