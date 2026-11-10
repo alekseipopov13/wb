@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "date": "2026-10-22",
+  "version": 4,
+  "date": "2026-11-10",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
     "time": "ms",
@@ -16,42 +16,10 @@
       0.36,
       1
     ],
-    "rounding": "nearest integer",
+    "rounding": "truncate fractional rubles for display; never round source amount",
     "restart": "current interpolated float",
     "reducedMotionDuration": 0,
     "valuesAreDemoOnly": true
-  },
-  "amountLayout": {
-    "duration": 400,
-    "ease": [
-      0.22,
-      1,
-      0.36,
-      1
-    ],
-    "target": "measure actual formatted target with current typography + currency gap + currency cell",
-    "extraCurrencyGap": 8,
-    "eyeGap": 8,
-    "reducedMotionDuration": 0,
-    "delay": 0,
-    "digitCellEm": 0.52,
-    "thousandsCellEm": 0.2,
-    "currencyCellEm": 0.65,
-    "currencyTrackingEm": -0.04,
-    "visuallyHiddenCurrencySpace": true,
-    "sectionHeight": 117,
-    "lineHeight": 65,
-    "textLineHeight": 58,
-    "paddingLeft": 12,
-    "centerOffset": 6,
-    "segmentToLineGap": 12,
-    "lineToCarouselGap": 12,
-    "eyeSize": 24,
-    "digitCount": "from amount data; not fixed at five or six",
-    "grouping": "from active formatter; align separators by decimal place during transition",
-    "transitionReserve": "derive from current visible amount and new target; exclude empty cells from final width",
-    "sameMeasuredWidth": "count only; no layout displacement",
-    "center": "centre of available container after padding; 201px is only the 390px demo"
   },
   "carousel": {
     "duration": 400,
@@ -94,6 +62,77 @@
       154261
     ],
     "variableGroupingTransitionsVerified": false,
-    "note": "Prototype reserve, not a product digit limit; general-width requirements need additional boundary tests"
+    "note": "Prototype reserve, not a product digit limit; general-width requirements need additional boundary tests",
+    "newSizingRequirementsVerified": false
+  },
+  "status": "Specification update; adaptive font sizing is not implemented by this documentation change",
+  "legacyPrototypeAmountLayout": {
+    "duration": 400,
+    "ease": [
+      0.22,
+      1,
+      0.36,
+      1
+    ],
+    "target": "measure actual formatted target with current typography + currency gap + currency cell",
+    "extraCurrencyGap": 8,
+    "eyeGap": 8,
+    "reducedMotionDuration": 0,
+    "delay": 0,
+    "digitCellEm": 0.52,
+    "thousandsCellEm": 0.2,
+    "currencyCellEm": 0.65,
+    "currencyTrackingEm": -0.04,
+    "visuallyHiddenCurrencySpace": true,
+    "sectionHeight": 117,
+    "lineHeight": 65,
+    "textLineHeight": 58,
+    "paddingLeft": 12,
+    "centerOffset": 6,
+    "segmentToLineGap": 12,
+    "lineToCarouselGap": 12,
+    "eyeSize": 24,
+    "digitCount": "from amount data; not fixed at five or six",
+    "grouping": "from active formatter; align separators by decimal place during transition",
+    "transitionReserve": "derive from current visible amount and new target; exclude empty cells from final width",
+    "sameMeasuredWidth": "count only; no layout displacement",
+    "center": "centre of available container after padding; 201px is only the 390px demo",
+    "status": "Archived 2026-10-22; moving eye and fixed typography are not v4 requirements"
+  },
+  "amountLayout": {
+    "status": "target requirement",
+    "baseFontSize": "from current layout token",
+    "baseLineHeight": "from current layout token",
+    "singleLine": true,
+    "baseSizeCharacterThreshold": 12,
+    "characterCountIncludes": [
+      "digits",
+      "grouping spaces",
+      "currency space",
+      "currency symbol",
+      "minus sign if applicable"
+    ],
+    "overThreshold": "start reduction; never truncate digits to 12 characters",
+    "shrinkMultiplier": 0.9,
+    "minimumFontSize": 16,
+    "minimumFontUnit": "sp before system scale",
+    "lineHeight": "baseLineHeight * fontSize / baseFontSize",
+    "measurement": "actual formatted amount and currency at effective font size within reserved text slot",
+    "availableWidth": "rowWidth - horizontalPadding - eyeSlotWidth - eyeGap",
+    "overflowAtMinimum": "right-edge fade in text slot only",
+    "ellipsis": false,
+    "fadeWidth": null,
+    "fadeProfile": null,
+    "blockHeight": "fixed by layout, independent of amount",
+    "eyePosition": "fixed; outside amount mask",
+    "maximumSpecifiedSystemFontScale": 1.5,
+    "recalculateOn": [
+      "amount",
+      "available width",
+      "loaded font",
+      "system font scale"
+    ],
+    "perFrameFontFit": false,
+    "reducedMotion": "final number immediately; same font fit and fade rules"
   }
 }
