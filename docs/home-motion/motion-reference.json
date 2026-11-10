@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "date": "2026-11-10",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
@@ -136,11 +136,8 @@
     "reducedMotion": "final number immediately; same font fit and fade rules"
   },
   "initialLoad": {
-    "status": "implemented in wb-test; snapshot 2026-11-10",
-    "minimumSkeletonMs": 1200,
-    "resourceTimeoutMs": 3500,
-    "resourceReadiness": "document.fonts.ready and all mounted non-lazy image decode promises settled",
-    "timeOrigin": "T = max(1200, min(resourcesSettledMs, 3500)); stages below relative to T",
+    "status": "platform-neutral handoff; post-load motion demonstrated in wb-test",
+    "timeOrigin": "T = application content readiness event; all stages relative to T",
     "skeletonExit": {
       "startMs": 0,
       "durationMs": 220,
@@ -148,7 +145,7 @@
         1,
         0
       ],
-      "ease": "Motion default tween; not overridden"
+      "ease": "smooth fade-out"
     },
     "cashback": {
       "startMs": 300,
@@ -211,17 +208,25 @@
       "direction": "LTR",
       "baseColor": "#F6F6F9",
       "centerColorHeader": "#E0E0EB",
-      "centerColorBody": "#FFFFFF"
+      "centerColorBody": "#FFFFFF",
+      "repeat": "until application content readiness, without a specified repeat limit"
     },
     "reducedMotion": {
-      "minimumSkeletonMs": 200,
-      "resourceTimeoutMs": 3500,
       "shimmer": false,
       "skeletonExitMs": 0,
       "geometryDurationMs": 0,
-      "finalRotationDegrees": -10
+      "finalRotationDegrees": -10,
+      "loadingPolicy": "same application-defined duration and readiness; static skeletons"
     },
-    "replay": "full page reload / new app mount; not back navigation or mode switching",
-    "autoplay": "only ready and active home; categories 20000ms, promo banners 6000ms"
+    "replay": "initial opening; not back navigation or mode switching",
+    "autoplay": "only after intro completes and home is active; categories 20000ms, promo banners 6000ms",
+    "loadingPolicy": {
+      "owner": "application developers",
+      "duration": "unbounded by this specification",
+      "readiness": "application-defined content readiness event",
+      "automaticTimeoutTransition": false,
+      "waitForShimmerCycleEnd": false,
+      "componentNames": "descriptive roles only; implementation names are unrestricted"
+    }
   }
 }
