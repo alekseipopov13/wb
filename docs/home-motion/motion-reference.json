@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "date": "2026-11-10",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
@@ -134,5 +134,94 @@
     ],
     "perFrameFontFit": false,
     "reducedMotion": "final number immediately; same font fit and fade rules"
+  },
+  "initialLoad": {
+    "status": "implemented in wb-test; snapshot 2026-11-10",
+    "minimumSkeletonMs": 1200,
+    "resourceTimeoutMs": 3500,
+    "resourceReadiness": "document.fonts.ready and all mounted non-lazy image decode promises settled",
+    "timeOrigin": "T = max(1200, min(resourcesSettledMs, 3500)); stages below relative to T",
+    "skeletonExit": {
+      "startMs": 0,
+      "durationMs": 220,
+      "opacity": [
+        1,
+        0
+      ],
+      "ease": "Motion default tween; not overridden"
+    },
+    "cashback": {
+      "startMs": 300,
+      "durationMs": 400,
+      "heightPx": [
+        116,
+        68
+      ],
+      "widthPx": 119,
+      "amountBottomPx": 12
+    },
+    "referralReveal": {
+      "after": "cashback animation complete",
+      "nominalStartMs": 700,
+      "durationMs": 300,
+      "opacity": [
+        0,
+        1
+      ],
+      "scale": [
+        0.9,
+        1
+      ],
+      "rotationDegrees": 0
+    },
+    "referralTilt": {
+      "after": "referral reveal complete",
+      "nominalStartMs": 1000,
+      "durationMs": 280,
+      "rotationDegrees": [
+        0,
+        -10
+      ]
+    },
+    "geometryEase": [
+      0.22,
+      1,
+      0.36,
+      1
+    ],
+    "transformOrigin": "50% 50%",
+    "nominalReadyMs": 1280,
+    "headerHeight": "452 CSS px + safe-area-inset-top",
+    "shimmer": {
+      "cycleMs": 2000,
+      "sweepMs": 1000,
+      "pauseAfterMs": 1000,
+      "initialDelayMs": 0,
+      "travelPx": 680,
+      "stripeWidthPx": 50,
+      "gradientStopsPx": [
+        0,
+        25,
+        50
+      ],
+      "skewXDegrees": -15,
+      "angleToHorizontalDegrees": -75,
+      "initialLeftPx": -150,
+      "ease": "linear",
+      "direction": "LTR",
+      "baseColor": "#F6F6F9",
+      "centerColorHeader": "#E0E0EB",
+      "centerColorBody": "#FFFFFF"
+    },
+    "reducedMotion": {
+      "minimumSkeletonMs": 200,
+      "resourceTimeoutMs": 3500,
+      "shimmer": false,
+      "skeletonExitMs": 0,
+      "geometryDurationMs": 0,
+      "finalRotationDegrees": -10
+    },
+    "replay": "full page reload / new app mount; not back navigation or mode switching",
+    "autoplay": "only ready and active home; categories 20000ms, promo banners 6000ms"
   }
 }
