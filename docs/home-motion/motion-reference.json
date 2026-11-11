@@ -1,14 +1,14 @@
 {
-  "version": 7,
-  "date": "2026-11-10",
+  "version": 8,
+  "date": "2026-11-11",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
     "time": "ms",
     "distance": "CSS px"
   },
   "balance": {
-    "any": 95775,
-    "wb": 154261,
+    "any": 52000,
+    "wb": 489943312433,
     "duration": 400,
     "ease": [
       0.22,
@@ -19,7 +19,21 @@
     "rounding": "truncate fractional rubles for display; never round source amount",
     "restart": "current interpolated float",
     "reducedMotionDuration": 0,
-    "valuesAreDemoOnly": true
+    "valuesAreDemoOnly": true,
+    "prototype": "https://lyosha.fun/wb-test-1/",
+    "synchronous": [
+      "number",
+      "font size",
+      "reserved width",
+      "eye position"
+    ],
+    "center": "fixed centre of amount and currency, excluding eye",
+    "numericPath": "monotonic magnitude path; new decimal places wait for available width within the same 400ms progress",
+    "fixedCardBalances": {
+      "primary": 1000000,
+      "cash": 1000000000
+    },
+    "totalIsIndependentTestFixture": true
   },
   "carousel": {
     "duration": 400,
@@ -63,9 +77,10 @@
     ],
     "variableGroupingTransitionsVerified": false,
     "note": "Prototype reserve, not a product digit limit; general-width requirements need additional boundary tests",
-    "newSizingRequirementsVerified": false
+    "newSizingRequirementsVerified": false,
+    "scope": "Archived wb-test snapshot, not current wb-test-1"
   },
-  "status": "Specification update; adaptive font sizing is not implemented by this documentation change",
+  "status": "Balance v5 implemented in wb-test-1; main wb-test retains previous balance motion",
   "legacyPrototypeAmountLayout": {
     "duration": 400,
     "ease": [
@@ -97,10 +112,10 @@
     "transitionReserve": "derive from current visible amount and new target; exclude empty cells from final width",
     "sameMeasuredWidth": "count only; no layout displacement",
     "center": "centre of available container after padding; 201px is only the 390px demo",
-    "status": "Archived 2026-10-22; moving eye and fixed typography are not v4 requirements"
+    "status": "Archived 2026-10-22; not current balance v5 geometry"
   },
   "amountLayout": {
-    "status": "target requirement",
+    "status": "implemented in wb-test-1",
     "baseFontSize": "from current layout token",
     "baseLineHeight": "from current layout token",
     "singleLine": true,
@@ -118,13 +133,13 @@
     "minimumFontUnit": "sp before system scale",
     "lineHeight": "baseLineHeight * fontSize / baseFontSize",
     "measurement": "actual formatted amount and currency at effective font size within reserved text slot",
-    "availableWidth": "rowWidth - horizontalPadding - eyeSlotWidth - eyeGap",
+    "availableWidth": "row width minus symmetric reserves for inset, eye and gap",
     "overflowAtMinimum": "right-edge fade in text slot only",
     "ellipsis": false,
     "fadeWidth": null,
     "fadeProfile": null,
     "blockHeight": "fixed by layout, independent of amount",
-    "eyePosition": "fixed; outside amount mask",
+    "eyePosition": "moves with reserved amount width, outside text mask",
     "maximumSpecifiedSystemFontScale": 1.5,
     "recalculateOn": [
       "amount",
@@ -133,7 +148,14 @@
       "system font scale"
     ],
     "perFrameFontFit": false,
-    "reducedMotion": "final number immediately; same font fit and fade rules"
+    "reducedMotion": "final number immediately; same font fit and fade rules",
+    "center": "fixed centre of amount and currency",
+    "eyeGapAtRest": 8,
+    "eyeGapDuringTransition": "may grow to reserve space for upcoming decimal places",
+    "fontTransitionDuration": 400,
+    "fontTransitionDelay": 0,
+    "fontTransition": "continuous; 10% steps select endpoint only",
+    "widthTransitionDuration": 400
   },
   "initialLoad": {
     "status": "platform-neutral motion specification; iOS and Android examples provided",
