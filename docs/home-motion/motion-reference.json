@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 10,
   "date": "2026-11-11",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
@@ -38,6 +38,23 @@
         "cash": 1000000000
       },
       "totalIsIndependentTestFixture": true
+    },
+    "antiJank": {
+      "sharedProgress": true,
+      "delayMs": 0,
+      "fontFit": "endpoint selection only, not per intermediate number",
+      "geometryPrecision": "continuous; no 10-percent or integer-size steps",
+      "currency": "same current font size or proportional scale as digits; stable baseline; no separate delay",
+      "eye": "position derived from smoothly interpolated visible reserved width; fixed icon and hit area",
+      "completion": "all values at target at 400ms; no post-animation relayout",
+      "interruption": "restart from current visible number, font, reserved width and eye position",
+      "acceptanceFramesMs": [
+        0,
+        100,
+        200,
+        300,
+        400
+      ]
     }
   },
   "carousel": {
