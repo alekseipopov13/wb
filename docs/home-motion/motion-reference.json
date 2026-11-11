@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "date": "2026-11-11",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
@@ -7,8 +7,8 @@
     "distance": "CSS px"
   },
   "balance": {
-    "any": 52000,
-    "wb": 489943312433,
+    "any": 95775,
+    "wb": 154261,
     "duration": 400,
     "ease": [
       0.22,
@@ -20,7 +20,7 @@
     "restart": "current interpolated float",
     "reducedMotionDuration": 0,
     "valuesAreDemoOnly": true,
-    "prototype": "https://lyosha.fun/wb-test-1/",
+    "prototype": "https://lyosha.fun/wb-test/",
     "synchronous": [
       "number",
       "font size",
@@ -29,11 +29,16 @@
     ],
     "center": "fixed centre of amount and currency, excluding eye",
     "numericPath": "monotonic magnitude path; new decimal places wait for available width within the same 400ms progress",
-    "fixedCardBalances": {
-      "primary": 1000000,
-      "cash": 1000000000
-    },
-    "totalIsIndependentTestFixture": true
+    "largeAmountExample": {
+      "prototype": "https://lyosha.fun/wb-test-1/",
+      "any": 52000,
+      "wb": 489943312433,
+      "fixedCardBalances": {
+        "primary": 1000000,
+        "cash": 1000000000
+      },
+      "totalIsIndependentTestFixture": true
+    }
   },
   "carousel": {
     "duration": 400,
@@ -80,7 +85,7 @@
     "newSizingRequirementsVerified": false,
     "scope": "Archived wb-test snapshot, not current wb-test-1"
   },
-  "status": "Balance v5 implemented in wb-test-1; main wb-test retains previous balance motion",
+  "status": "Balance motion shared by wb-test and wb-test-1; font reduction required only for measured width overflow",
   "legacyPrototypeAmountLayout": {
     "duration": 400,
     "ease": [
@@ -115,19 +120,10 @@
     "status": "Archived 2026-10-22; not current balance v5 geometry"
   },
   "amountLayout": {
-    "status": "implemented in wb-test-1",
+    "status": "width-only sizing requirement; ordinary sums verified in wb-test",
     "baseFontSize": "from current layout token",
     "baseLineHeight": "from current layout token",
     "singleLine": true,
-    "baseSizeCharacterThreshold": 12,
-    "characterCountIncludes": [
-      "digits",
-      "grouping spaces",
-      "currency space",
-      "currency symbol",
-      "minus sign if applicable"
-    ],
-    "overThreshold": "start reduction; never truncate digits to 12 characters",
     "shrinkMultiplier": 0.9,
     "minimumFontSize": 16,
     "minimumFontUnit": "sp before system scale",
@@ -154,8 +150,12 @@
     "eyeGapDuringTransition": "may grow to reserve space for upcoming decimal places",
     "fontTransitionDuration": 400,
     "fontTransitionDelay": 0,
-    "fontTransition": "continuous; 10% steps select endpoint only",
-    "widthTransitionDuration": 400
+    "fontTransition": "continuous only when selected font sizes differ; 10% steps select endpoint only",
+    "widthTransitionDuration": 400,
+    "shrinkCondition": "measured formatted amount width > actual available width",
+    "fitsAtBase": "keep base font size, independent of character count",
+    "sameSizeTransition": "no font-size animation if both endpoint sizes match",
+    "characterCountTriggersReduction": false
   },
   "initialLoad": {
     "status": "platform-neutral motion specification; iOS and Android examples provided",
