@@ -1,6 +1,6 @@
 {
-  "version": 10,
-  "date": "2026-11-11",
+  "version": 11,
+  "date": "2026-11-12",
   "prototype": "https://lyosha.fun/wb-test/",
   "units": {
     "time": "ms",
@@ -175,7 +175,7 @@
     "characterCountTriggersReduction": false
   },
   "initialLoad": {
-    "status": "platform-neutral motion specification; iOS and Android examples provided",
+    "status": "v4: single benefits skeleton; fade only; fixed cashback and referral geometry",
     "timeOrigin": "T = application content readiness event; all stages relative to T",
     "skeletonExit": {
       "startMs": 0,
@@ -184,49 +184,8 @@
         1,
         0
       ],
-      "ease": "smooth fade-out"
+      "ease": "cubic-bezier(0, 0, 0.58, 1)"
     },
-    "cashback": {
-      "startMs": 300,
-      "durationMs": 400,
-      "heightPx": [
-        116,
-        68
-      ],
-      "widthPx": 119,
-      "amountBottomPx": 12
-    },
-    "referralReveal": {
-      "after": "cashback animation complete",
-      "nominalStartMs": 700,
-      "durationMs": 300,
-      "opacity": [
-        0,
-        1
-      ],
-      "scale": [
-        0.9,
-        1
-      ],
-      "rotationDegrees": 0
-    },
-    "referralTilt": {
-      "after": "referral reveal complete",
-      "nominalStartMs": 1000,
-      "durationMs": 280,
-      "rotationDegrees": [
-        0,
-        -10
-      ]
-    },
-    "geometryEase": [
-      0.22,
-      1,
-      0.36,
-      1
-    ],
-    "transformOrigin": "card centre",
-    "nominalReadyMs": 1280,
     "headerHeight": "constant throughout the sequence; from current design",
     "shimmer": {
       "cycleMs": 2000,
@@ -251,12 +210,11 @@
     "reducedMotion": {
       "shimmer": false,
       "skeletonExitMs": 0,
-      "geometryDurationMs": 0,
       "finalRotationDegrees": -10,
       "loadingPolicy": "same application-defined duration and readiness; static skeletons"
     },
     "replay": "initial opening; not back navigation or mode switching",
-    "autoplay": "only after intro completes and home is active; categories 20000ms, promo banners 6000ms",
+    "autoplay": "timers start at application readiness while home active; categories 20000ms, promo banners 6000ms",
     "loadingPolicy": {
       "owner": "application developers",
       "duration": "unbounded by this specification",
@@ -269,6 +227,23 @@
       "ios": "examples/initial-load/InitialLoad.swift",
       "android": "examples/initial-load/InitialLoad.kt"
     },
-    "sizeUnits": "design units; corresponding pt on iOS and dp on Android"
+    "sizeUnits": "design units; corresponding pt on iOS and dp on Android",
+    "benefitsSkeleton": {
+      "count": 1,
+      "height": 116,
+      "horizontalInset": 16,
+      "cornerRadius": 20,
+      "width": "available width minus 32",
+      "mask": "one shared rounded rectangle for all benefits"
+    },
+    "loadedGeometry": {
+      "cashbackWidth": 119,
+      "cashbackHeight": 68,
+      "referralOpacity": 1,
+      "referralScale": 1,
+      "referralRotationDegrees": -10,
+      "animated": false
+    },
+    "nominalRevealCompleteMs": 220
   }
 }

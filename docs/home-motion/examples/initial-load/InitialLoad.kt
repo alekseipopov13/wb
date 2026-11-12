@@ -22,29 +22,20 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 // Example names are arbitrary. Retain this state with the screen owner above
 // navigation destinations; a new instance denotes a new opening of the screen.
 @Stable
 class InitialLoadMotion {
-    val cashbackHeight = Animatable(116f)
-    val referralProgress = Animatable(0f)
-    val referralAngle = Animatable(0f)
     val skeletonOpacity = Animatable(1f)
     var showsSkeleton by mutableStateOf(true)
-        private set
-    var allowsReferral by mutableStateOf(false)
         private set
     var isWaiting by mutableStateOf(true)
         private set
     var isFinished by mutableStateOf(false)
         private set
     private var started = false
-    private val curve = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
 
     // Invoke on the UI dispatcher with a Compose frame clock. The application
     // supplies readiness; this example never waits for a loading timeout.
@@ -54,31 +45,16 @@ class InitialLoadMotion {
         isWaiting = false
         try {
             if (!reduceMotion) {
-                coroutineScope {
-                    launch {
-                        skeletonOpacity.animateTo(
-                            0f, tween(220, easing = CubicBezierEasing(0f, 0f, 0.58f, 1f))
-                        )
-                        showsSkeleton = false
-                    }
-                    // Measured from T; overlaps the fade instead of following it.
-                    delay(300)
-                    cashbackHeight.animateTo(68f, tween(400, easing = curve))
-                    allowsReferral = true
-                    referralProgress.animateTo(1f, tween(300, easing = curve))
-                    referralAngle.animateTo(-10f, tween(280, easing = curve))
-                }
+                skeletonOpacity.animateTo(
+                    0f, tween(220, easing = CubicBezierEasing(0f, 0f, 0.58f, 1f))
+                )
             }
         } finally {
             // An interrupted owner completes without replaying from skeletons.
             // Do not cancel this owner merely because a detail screen is pushed.
             withContext(NonCancellable) {
-                cashbackHeight.snapTo(68f)
-                referralProgress.snapTo(1f)
-                referralAngle.snapTo(-10f)
                 skeletonOpacity.snapTo(0f)
                 showsSkeleton = false
-                allowsReferral = true
                 isWaiting = false
                 isFinished = true
             }
@@ -121,28 +97,19 @@ fun InitialLoadExample(
     }
 }
 
-// Animated slot only. Supply your own card views. Pin the amount 12 dp from the
-// bottom inside the cashback card; height changes, font size does not.
+// Static right-hand cards. The supplied skeleton view covers the ENTIRE
+// benefits area with ONE rounded placeholder: height 116 dp, radius 20 dp.
 @Composable
-fun BenefitsMotionExample(
-    motion: InitialLoadMotion,
+fun BenefitsLayoutExample(
     cashback: @Composable BoxScope.() -> Unit,
     referral: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier.size(119.dp, 126.dp), contentAlignment = Alignment.TopCenter) {
+        Box(Modifier.size(119.dp, 68.dp).clipToBounds(), content = cashback)
         Box(
-            Modifier.size(119.dp, motion.cashbackHeight.value.dp).clipToBounds(),
-            content = cashback,
-        )
-        if (motion.allowsReferral) Box(
             Modifier.offset(y = 67.6.dp).size(115.dp, 51.dp)
-                .graphicsLayer {
-                    alpha = motion.referralProgress.value
-                    scaleX = 0.9f + 0.1f * motion.referralProgress.value
-                    scaleY = scaleX
-                    rotationZ = motion.referralAngle.value
-                },
+                .graphicsLayer { rotationZ = -10f },
             content = referral,
         )
     }
