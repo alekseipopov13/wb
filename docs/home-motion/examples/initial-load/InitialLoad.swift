@@ -89,7 +89,7 @@ struct InitialLoadExample<Content: View, Skeleton: View>: View {
 
 // Static right-hand cards. Supply existing product views and layout tokens.
 // The full benefits area, including the left-hand categories widget, is covered
-// by ONE rounded skeleton in the supplied skeleton view (height 116, radius 20).
+// by TWO rounded skeletons in the supplied skeleton view (height 116 each, radius 20, gap 4; widths 235/119 at screen width 390).
 @available(iOS 17.0, macOS 14.0, *)
 @MainActor
 struct BenefitsLayoutExample<Cashback: View, Referral: View>: View {

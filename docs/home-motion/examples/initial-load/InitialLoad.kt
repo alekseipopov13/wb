@@ -98,7 +98,7 @@ fun InitialLoadExample(
 }
 
 // Static right-hand cards. The supplied skeleton view covers the ENTIRE
-// benefits area with ONE rounded placeholder: height 116 dp, radius 20 dp.
+// benefits area with TWO rounded placeholders: height 116 dp each, radius 20 dp, gap 4 dp; widths 235/119 at screen width 390.
 @Composable
 fun BenefitsLayoutExample(
     cashback: @Composable BoxScope.() -> Unit,
